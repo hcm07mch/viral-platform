@@ -1,0 +1,344 @@
+/* ===== Form Field Container ===== */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  min-width: 200px;
+  padding: 14px;
+  background-color: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.form-field:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.form-field:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-field-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ===== Label & Help Icon ===== */
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.field-required {
+  color: #dc2626;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+.help-icon {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #6b7280;
+  border: 1.5px solid #9ca3af;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  position: relative;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.help-icon:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+.help-tooltip {
+  position: absolute;
+  top: 28px;
+  right: 0;
+  z-index: 10;
+  min-width: 200px;
+  max-width: 300px;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #374151;
+  font-weight: 400;
+  pointer-events: none;
+}
+
+/* ===== Input Base Styles ===== */
+.field-input {
+  width: 100%;
+  border: 1.5px solid #d1d5db;
+  background-color: #ffffff;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #111;
+  line-height: 1.4;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  outline: none;
+}
+
+.field-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 숫자 입력 필드의 기본 스피너 버튼 스타일 커스터마이징 */
+.field-input[type="number"]::-webkit-inner-spin-button,
+.field-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.field-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ===== Number Field with Quick Add Buttons ===== */
+.number-field-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.number-input-with-reset {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.number-input-with-reset .field-input {
+  flex: 1;
+  padding-right: 36px;
+}
+
+.reset-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.reset-btn:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.reset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quick-add-buttons {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.quick-add-btn {
+  border: 1.5px solid #d1d5db;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  white-space: nowrap;
+  min-width: 48px;
+}
+
+.quick-add-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.quick-add-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+}
+
+.quick-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field-input:disabled {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.field-input::placeholder {
+  color: #9ca3af;
+}
+
+/* ===== Select Dropdown ===== */
+.field-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.field-select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
+
+/* ===== Multi-Select ===== */
+.field-multiselect {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.multiselect-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.multiselect-option:hover {
+  background-color: #f9fafb;
+}
+
+.multiselect-option input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.multiselect-label {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.4;
+  user-select: none;
+}
+
+/* ===== File Upload ===== */
+.field-file-wrapper {
+  position: relative;
+}
+
+.field-file-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.field-file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 100px;
+}
+
+.field-file-label:hover {
+  border-color: #667eea;
+  background-color: #f0f4ff;
+}
+
+.field-file-input:focus + .field-file-label {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.file-icon {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.file-text {
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.field-file-label:hover .file-text {
+  color: #667eea;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .form-field {
+    min-width: 100%;
+  }
+
+  .help-tooltip {
+    max-width: 240px;
+  }
+}

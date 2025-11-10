@@ -1,0 +1,288 @@
+'use client';
+
+import { useState } from 'react';
+import '@/styles/formField.css';
+
+export type FieldType = 
+  | 'NUMBER' 
+  | 'TEXT' 
+  | 'IMAGE' 
+  | 'URL' 
+  | 'DATE' 
+  | 'SELECT' 
+  | 'MULTISELECT' 
+  | 'FILE';
+
+export interface FormFieldProps {
+  id: string;
+  type: FieldType;
+  label: string;
+  helpText?: string;
+  placeholder?: string;
+  value?: any;
+  onChange?: (value: any) => void;
+  required?: boolean;
+  options?: { value: string; label: string }[]; // SELECT, MULTISELECT용
+  accept?: string; // FILE, IMAGE용
+  min?: number; // NUMBER용
+  max?: number; // NUMBER용
+  disabled?: boolean;
+}
+
+export default function FormField({
+  id,
+  type,
+  label,
+  helpText,
+  placeholder,
+  value,
+  onChange,
+  required = false,
+  options = [],
+  accept,
+  min,
+  max,
+  disabled = false,
+}: FormFieldProps) {
+  const [showHelp, setShowHelp] = useState(false);
+  const [fileName, setFileName] = useState<string>('');
+
+  const handleChange = (newValue: any) => {
+    if (onChange && !disabled) {
+      onChange(newValue);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      handleChange(file);
+    }
+  };
+
+  const handleMultiSelectChange = (optionValue: string) => {
+    const currentValues = Array.isArray(value) ? value : [];
+    const newValues = currentValues.includes(optionValue)
+      ? currentValues.filter(v => v !== optionValue)
+      : [...currentValues, optionValue];
+    handleChange(newValues);
+  };
+
+  const handleQuickAdd = (amount: number) => {
+    const currentValue = parseInt(value || '0');
+    const newValue = currentValue + amount;
+    handleChange(newValue.toString());
+  };
+
+  const handleReset = () => {
+    handleChange('');
+  };
+
+  const renderInput = () => {
+    switch (type) {
+      case 'NUMBER':
+        return (
+          <div className="number-field-wrapper">
+            <div className="number-input-with-reset">
+              <input
+                type="number"
+                id={id}
+                className="field-input"
+                placeholder={placeholder}
+                value={value || ''}
+                onChange={(e) => handleChange(e.target.value)}
+                min={min}
+                max={max}
+                disabled={disabled}
+                required={required}
+              />
+              {value && (
+                <button
+                  type="button"
+                  className="reset-btn"
+                  onClick={handleReset}
+                  disabled={disabled}
+                  title="초기화"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              )}
+            </div>
+            <div className="quick-add-buttons">
+              <button
+                type="button"
+                className="quick-add-btn"
+                onClick={() => handleQuickAdd(5)}
+                disabled={disabled}
+              >
+                +5
+              </button>
+              <button
+                type="button"
+                className="quick-add-btn"
+                onClick={() => handleQuickAdd(10)}
+                disabled={disabled}
+              >
+                +10
+              </button>
+              <button
+                type="button"
+                className="quick-add-btn"
+                onClick={() => handleQuickAdd(100)}
+                disabled={disabled}
+              >
+                +100
+              </button>
+            </div>
+          </div>
+        );
+
+      case 'TEXT':
+        return (
+          <input
+            type="text"
+            id={id}
+            className="field-input"
+            placeholder={placeholder}
+            value={value || ''}
+            onChange={(e) => handleChange(e.target.value)}
+            disabled={disabled}
+            required={required}
+          />
+        );
+
+      case 'URL':
+        return (
+          <input
+            type="url"
+            id={id}
+            className="field-input"
+            placeholder={placeholder || 'https://example.com'}
+            value={value || ''}
+            onChange={(e) => handleChange(e.target.value)}
+            disabled={disabled}
+            required={required}
+          />
+        );
+
+      case 'DATE':
+        return (
+          <input
+            type="date"
+            id={id}
+            className="field-input"
+            value={value || ''}
+            onChange={(e) => handleChange(e.target.value)}
+            disabled={disabled}
+            required={required}
+          />
+        );
+
+      case 'SELECT':
+        return (
+          <select
+            id={id}
+            className="field-input field-select"
+            value={value || ''}
+            onChange={(e) => handleChange(e.target.value)}
+            disabled={disabled}
+            required={required}
+          >
+            <option value="">{placeholder || '선택하세요'}</option>
+            {options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        );
+
+      case 'MULTISELECT':
+        return (
+          <div className="field-multiselect">
+            {options.map((opt) => (
+              <label key={opt.value} className="multiselect-option">
+                <input
+                  type="checkbox"
+                  checked={Array.isArray(value) && value.includes(opt.value)}
+                  onChange={() => handleMultiSelectChange(opt.value)}
+                  disabled={disabled}
+                />
+                <span className="multiselect-label">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'FILE':
+      case 'IMAGE':
+        return (
+          <div className="field-file-wrapper">
+            <input
+              type="file"
+              id={id}
+              className="field-file-input"
+              accept={accept || (type === 'IMAGE' ? 'image/*' : undefined)}
+              onChange={handleFileChange}
+              disabled={disabled}
+              required={required}
+            />
+            <label htmlFor={id} className="field-file-label">
+              <svg
+                className="file-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <span className="file-text">
+                {fileName || placeholder || '파일을 선택하거나 드래그하세요'}
+              </span>
+            </label>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className={`form-field ${disabled ? 'form-field-disabled' : ''}`}>
+      <div className="field-label-row">
+        <label htmlFor={id} className="field-label">
+          {label}
+          {required && <span className="field-required">*</span>}
+        </label>
+        {helpText && (
+          <>
+            <div
+              className="help-icon"
+              onMouseEnter={() => setShowHelp(true)}
+              onMouseLeave={() => setShowHelp(false)}
+            >
+              ?
+            </div>
+            {showHelp && (
+              <div className="help-tooltip">{helpText}</div>
+            )}
+          </>
+        )}
+      </div>
+      {renderInput()}
+    </div>
+  );
+}
