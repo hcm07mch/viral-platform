@@ -7,7 +7,6 @@ export default function OrderDetailPage() {
     <>
       <Header active="orders" pageTitle="주문 상세" />
       <OrderDetailClient />
-      <Footer />
     </>
   );
 }

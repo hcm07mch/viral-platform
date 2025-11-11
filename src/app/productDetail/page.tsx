@@ -84,12 +84,50 @@ export default async function ProductDetailPage({ searchParams }: PageProps) {
     );
   }
 
-  // 상품 입력 필드 정의 가져오기
-  const { data: inputDefs } = await supabase
+  // 상품 입력 필드 정의 가져오기 (템플릿 조인)
+  const { data: inputDefsRaw } = await supabase
     .from('product_input_defs')
-    .select('*')
+    .select(`
+      id,
+      product_id,
+      required,
+      sort_order,
+      validation,
+      min_select,
+      max_select,
+      input_field_templates (
+        id,
+        field_key,
+        label,
+        field_type,
+        help_text,
+        description
+      )
+    `)
     .eq('product_id', productId)
     .order('sort_order', { ascending: true });
+
+  // 중첩 객체를 평면화
+  const inputDefs = inputDefsRaw?.map(def => {
+    const template = Array.isArray(def.input_field_templates) 
+      ? def.input_field_templates[0] 
+      : def.input_field_templates;
+    
+    return {
+      id: def.id,
+      product_id: def.product_id,
+      field_key: template?.field_key || '',
+      label: template?.label || '',
+      field_type: template?.field_type || 'TEXT',
+      help_text: template?.help_text || '',
+      description: template?.description || '',
+      required: def.required,
+      sort_order: def.sort_order,
+      validation: def.validation,
+      min_select: def.min_select,
+      max_select: def.max_select
+    };
+  }) || [];
 
   // 카테고리 이름 추출
   const categoryName = product.product_category_map?.[0]?.product_categories?.name || '';

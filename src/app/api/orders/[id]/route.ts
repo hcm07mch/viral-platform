@@ -34,25 +34,74 @@ export async function GET(
       );
     }
 
-    // order_items 조회
+    // order_items 조회 (product 정보 포함)
     const { data: items, error: itemsError } = await supabase
       .from('order_items')
-      .select('*')
+      .select(`
+        *,
+        products (
+          id,
+          name
+        )
+      `)
       .eq('order_id', order.id);
 
     if (itemsError) {
       console.error('주문 항목 조회 오류:', itemsError);
     }
+    
+    // 상품의 input_field_templates 조회
+    let inputDefs: any[] = [];
+    
+    if (items && items.length > 0) {
+      const firstItem = items[0];
+      const productId = firstItem.product_id;
+      
+      if (productId) {
+        const { data: inputDefsRaw } = await supabase
+          .from('product_input_defs')
+          .select(`
+            id,
+            product_id,
+            required,
+            sort_order,
+            validation,
+            min_select,
+            max_select,
+            input_field_templates (
+              id,
+              field_key,
+              label,
+              field_type,
+              help_text,
+              description
+            )
+          `)
+          .eq('product_id', productId)
+          .order('sort_order', { ascending: true });
 
-    // product_input_definitions 조회
-    const { data: inputDefs, error: inputDefsError } = await supabase
-      .from('product_input_definitions')
-      .select('*')
-      .eq('product_id', order.product_id)
-      .order('sort_order', { ascending: true });
-
-    if (inputDefsError) {
-      console.error('상품 정의 조회 오류:', inputDefsError);
+        // 중첩 객체를 평면화
+        inputDefs = inputDefsRaw?.map(def => {
+          const template = Array.isArray(def.input_field_templates) 
+            ? def.input_field_templates[0] 
+            : def.input_field_templates;
+          
+          return {
+            id: def.id,
+            product_id: def.product_id,
+            field_key: template?.field_key || '',
+            label: template?.label || '',
+            field_type: template?.field_type || 'TEXT',
+            help_text: template?.help_text || '',
+            description: template?.description || '',
+            required: def.required,
+            sort_order: def.sort_order,
+            validation: def.validation,
+            min_select: def.min_select,
+            max_select: def.max_select
+          };
+        }) || [];
+      }
     }
 
     // 시작일/종료일 계산
@@ -88,7 +137,7 @@ export async function GET(
         order_details: order.order_details
       },
       items: items || [],
-      inputDefs: inputDefs || []
+      inputDefs: inputDefs
     });
 
   } catch (error) {
