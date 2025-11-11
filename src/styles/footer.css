@@ -10,7 +10,79 @@
 .footer-container {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 48px 32px 24px;
+  padding: 0;
+}
+
+/* ===== Compact Footer (Default View) ===== */
+.footer-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  gap: 16px;
+}
+
+.footer-compact-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-logo-compact {
+  font-size: 16px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 1px;
+}
+
+.footer-copyright-compact {
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+.footer-toggle-btn {
+  padding: 8px 16px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  color: #667eea;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.footer-toggle-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+  transform: translateY(-1px);
+}
+
+.footer-toggle-btn:active {
+  transform: translateY(0);
+}
+
+/* ===== Expanded Footer ===== */
+.footer-expanded {
+  border-top: 1px solid #4a5568;
+  padding: 32px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .footer-brand {
@@ -29,7 +101,7 @@
 }
 
 .footer-content {
-  margin-bottom: 32px;
+  margin-bottom: 0;
 }
 
 .footer-info-grid {
@@ -69,22 +141,27 @@
   text-decoration: underline;
 }
 
-.footer-bottom {
-  padding-top: 24px;
-  border-top: 1px solid #4a5568;
-}
-
-.footer-copyright {
-  margin: 0;
-  font-size: 12px;
-  color: #a0aec0;
-  text-align: center;
-}
-
 /* ===== 반응형 ===== */
 @media (max-width: 768px) {
-  .footer-container {
-    padding: 32px 20px 20px;
+  .footer-compact {
+    padding: 12px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footer-compact-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .footer-toggle-btn {
+    align-self: stretch;
+    text-align: center;
+  }
+
+  .footer-expanded {
+    padding: 24px 20px;
   }
 
   .footer-info-grid {
@@ -92,15 +169,11 @@
     gap: 16px;
   }
 
-  .footer-logo {
-    font-size: 20px;
+  .footer-logo-compact {
+    font-size: 14px;
   }
 
-  .footer-brand {
-    margin-bottom: 24px;
-  }
-
-  .footer-content {
-    margin-bottom: 24px;
+  .footer-copyright-compact {
+    font-size: 11px;
   }
 }

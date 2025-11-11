@@ -24,6 +24,21 @@ interface Notice {
   text: string;
 }
 
+interface InputDef {
+  id: number;
+  product_id: number;
+  field_key: string;
+  label: string;
+  field_type: string;
+  required: boolean;
+  sort_order: number;
+  validation: string | null;
+  help_text: string | null;
+  description: string | null;
+  min_select: number | null;
+  max_select: number | null;
+}
+
 interface OrderItem {
   id: string;
   clientName: string;
@@ -39,18 +54,28 @@ interface Props {
   tierPrice: number;
   userTier: string;
   notices?: Notice[];
+  inputDefs: InputDef[];
 }
 
 export default function ProductDetailClient({ 
   product, 
   tierPrice, 
   userTier,
-  notices = []
+  notices = [],
+  inputDefs = []
 }: Props) {
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState<Record<string, any>>({});
+
+  // 수량 관련 필드와 일반 필드 분리
+  const quantityFields = inputDefs.filter(def => 
+    def.field_key === 'daily_qty' || def.field_key === 'weeks'
+  );
+  const generalFields = inputDefs.filter(def => 
+    def.field_key !== 'daily_qty' && def.field_key !== 'weeks'
+  );
 
   const toggleNotice = () => {
     setNoticeOpen(!noticeOpen);
@@ -71,14 +96,14 @@ export default function ProductDetailClient({
   };
 
   const handleAddOrder = () => {
-    const dailyCount = parseInt(formData.dailyCount || '0');
+    const dailyCount = parseInt(formData.daily_qty || formData.dailyCount || '0');
     const weeks = parseInt(formData.weeks || '0');
     const totalCount = dailyCount * 7 * weeks;
     const estimatedPrice = totalCount * tierPrice;
 
     const newOrder: OrderItem = {
       id: `order-${Date.now()}`,
-      clientName: formData.clientName || '미입력',
+      clientName: formData.clientName || formData.keyword || '미입력',
       dailyCount,
       weeks,
       totalCount,
@@ -175,69 +200,19 @@ export default function ProductDetailClient({
               </div>
 
               <div className="order-form-row">
-                <FormField
-                  id="clientName"
-                  type="TEXT"
-                  label="상호명"
-                  helpText="주문하실 상호명을 입력해주세요."
-                  placeholder="예: 콩콩드 서탄지점"
-                  value={formData.clientName || ''}
-                  onChange={(value) => setFormData({ ...formData, clientName: value })}
-                />
-
-                <FormField
-                  id="platform"
-                  type="TEXT"
-                  label="매체"
-                  helpText="광고를 노출할 플랫폼 채널입니다"
-                  placeholder="예: 네이버 플레이스"
-                  value={formData.platform || ''}
-                  onChange={(value) => setFormData({ ...formData, platform: value })}
-                />
-
-                <FormField
-                  id="keywords"
-                  type="TEXT"
-                  label="키워드"
-                  helpText="노출용 키워드 또는 검색어/문구입니다"
-                  placeholder="예: 강릉맛집, 가족 외식 이벤트"
-                  value={formData.keywords || ''}
-                  onChange={(value) => setFormData({ ...formData, keywords: value })}
-                />
-              </div>
-
-              <div className="order-form-row">
-                <FormField
-                  id="placeUrl"
-                  type="URL"
-                  label="플레이스 URL"
-                  helpText="리뷰/콘텐츠를 연결할 실제 매장 위치 링크입니다"
-                  placeholder="https://place.naver.com/..."
-                  value={formData.placeUrl || ''}
-                  onChange={(value) => setFormData({ ...formData, placeUrl: value })}
-                />
-
-                <FormField
-                  id="storeUrl"
-                  type="URL"
-                  label="스토어 URL"
-                  helpText="상품 판매 페이지 또는 점포 주소입니다"
-                  placeholder="https://smartstore.naver.com/..."
-                  value={formData.storeUrl || ''}
-                  onChange={(value) => setFormData({ ...formData, storeUrl: value })}
-                />
-              </div>
-
-              <div className="order-form-row">
-                <FormField
-                  id="receiptImage"
-                  type="FILE"
-                  label="영수증 이미지"
-                  helpText="실제 방문/구매 인증용 자료입니다\nJPG/PNG 파일 권장."
-                  accept="image/*"
-                  value={formData.receiptImage || ''}
-                  onChange={(value) => setFormData({ ...formData, receiptImage: value })}
-                />
+                {generalFields.map((field) => (
+                  <FormField
+                    key={field.id}
+                    id={field.field_key}
+                    type={field.field_type as any}
+                    label={field.label}
+                    helpText={field.help_text || undefined}
+                    placeholder={field.description || `${field.label}를 입력하세요`}
+                    required={field.required}
+                    value={formData[field.field_key] || ''}
+                    onChange={(value) => setFormData({ ...formData, [field.field_key]: value })}
+                  />
+                ))}
               </div>
             </div>
 
@@ -249,25 +224,19 @@ export default function ProductDetailClient({
               </div>
 
               <div className="order-form-row">
-                <FormField
-                  id="dailyCount"
-                  type="NUMBER"
-                  label="발행량 (1일 기준 수량)"
-                  helpText="하루에 진행할 게시/리뷰 수량입니다"
-                  placeholder="예: 5"
-                  value={formData.dailyCount || ''}
-                  onChange={(value) => setFormData({ ...formData, dailyCount: value })}
-                />
-
-                <FormField
-                  id="weeks"
-                  type="NUMBER"
-                  label="주수"
-                  helpText="캠페인을 몇 주간 집행할지 입니다"
-                  placeholder="예: 2"
-                  value={formData.weeks || ''}
-                  onChange={(value) => setFormData({ ...formData, weeks: value })}
-                />
+                {quantityFields.map((field) => (
+                  <FormField
+                    key={field.id}
+                    id={field.field_key}
+                    type={field.field_type as any}
+                    label={field.label}
+                    helpText={field.help_text || undefined}
+                    placeholder={field.description || `${field.label}를 입력하세요`}
+                    required={field.required}
+                    value={formData[field.field_key] || ''}
+                    onChange={(value) => setFormData({ ...formData, [field.field_key]: value })}
+                  />
+                ))}
               </div>
 
               <div className="order-form-row">
@@ -275,10 +244,10 @@ export default function ProductDetailClient({
                   <div><strong>계산 방식</strong></div>
                   <div>(1일 수량) × 7일 × (주수)</div>
                   <div className="calc-amount" style={{ marginTop: '6px' }}>
-                    예: {formData.dailyCount || 0}건 × 7일 × {formData.weeks || 0}주 = 총 {(parseInt(formData.dailyCount || '0') * 7 * parseInt(formData.weeks || '0'))}건
+                    예: {formData.daily_qty || 0}건 × 7일 × {formData.weeks || 0}주 = 총 {(parseInt(formData.daily_qty || '0') * 7 * parseInt(formData.weeks || '0'))}건
                   </div>
                   <div style={{ fontSize: '11px', color: '#777', marginTop: '6px' }}>
-                    예상 발주 금액: {((parseInt(formData.dailyCount || '0') * 7 * parseInt(formData.weeks || '0')) * tierPrice).toLocaleString('ko-KR')}원
+                    예상 발주 금액: {((parseInt(formData.daily_qty || '0') * 7 * parseInt(formData.weeks || '0')) * tierPrice).toLocaleString('ko-KR')}원
                   </div>
                 </div>
               </div>

@@ -113,6 +113,13 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Textarea specific styles */
+.field-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
 /* 숫자 입력 필드의 기본 스피너 버튼 스타일 커스터마이징 */
 .field-input[type="number"]::-webkit-inner-spin-button,
 .field-input[type="number"]::-webkit-outer-spin-button {

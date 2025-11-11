@@ -6,6 +6,7 @@ import '@/styles/formField.css';
 export type FieldType = 
   | 'NUMBER' 
   | 'TEXT' 
+  | 'TEXTAREA'
   | 'IMAGE' 
   | 'URL' 
   | 'DATE' 
@@ -152,6 +153,20 @@ export default function FormField({
             onChange={(e) => handleChange(e.target.value)}
             disabled={disabled}
             required={required}
+          />
+        );
+
+      case 'TEXTAREA':
+        return (
+          <textarea
+            id={id}
+            className="field-input field-textarea"
+            placeholder={placeholder}
+            value={value || ''}
+            onChange={(e) => handleChange(e.target.value)}
+            disabled={disabled}
+            required={required}
+            rows={4}
           />
         );
 

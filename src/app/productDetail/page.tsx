@@ -81,6 +81,13 @@ export default async function ProductDetailPage({ searchParams }: PageProps) {
     );
   }
 
+  // 상품 입력 필드 정의 가져오기
+  const { data: inputDefs } = await supabase
+    .from('product_input_defs')
+    .select('*')
+    .eq('product_id', productId)
+    .order('sort_order', { ascending: true });
+
   // 카테고리 이름 추출
   const categoryName = product.product_category_map?.[0]?.product_categories?.name || '';
 
@@ -111,6 +118,7 @@ export default async function ProductDetailPage({ searchParams }: PageProps) {
         tierPrice={tierPrice}
         userTier={userTier}
         notices={notices}
+        inputDefs={inputDefs || []}
       />
     </>
   );
