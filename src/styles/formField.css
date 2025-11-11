@@ -133,15 +133,14 @@
 }
 
 /* ===== Number Field with Quick Add Buttons ===== */
-.number-field-wrapper {
+.number-field-container {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  align-items: flex-start;
 }
 
 .number-input-with-reset {
   position: relative;
-  flex: 1;
   display: flex;
   align-items: center;
 }
@@ -179,42 +178,47 @@
 }
 
 .reset-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
 .quick-add-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  flex-shrink: 0;
 }
 
 .quick-add-btn {
-  border: 1.5px solid #d1d5db;
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-  color: #374151;
-  font-size: 13px;
+  border: 1.5px solid #a78bfa;
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  color: #6d28d9;
+  font-size: 12px;
   font-weight: 600;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
   white-space: nowrap;
-  min-width: 48px;
+  min-width: 0;
+  box-shadow: 0 1px 3px rgba(139, 92, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .quick-add-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: #667eea;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
+  color: #5b21b6;
+  border-color: #8b5cf6;
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.2);
 }
 
 .quick-add-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 1px 3px rgba(139, 92, 246, 0.2);
 }
 
 .quick-add-btn:disabled {

@@ -27,15 +27,18 @@ export default async function ProductDetailPage({ searchParams }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
 
   let userTier = 'T4'; // 기본값 (비로그인 사용자)
+  let userBalance = 0; // 기본값 (비로그인 사용자)
+  
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('tier')
+      .select('tier, balance')
       .eq('user_id', user.id)
       .single();
 
     if (profile) {
       userTier = profile.tier;
+      userBalance = profile.balance || 0;
     }
   }
 
@@ -117,6 +120,7 @@ export default async function ProductDetailPage({ searchParams }: PageProps) {
         product={{ ...product, category: categoryName }}
         tierPrice={tierPrice}
         userTier={userTier}
+        userBalance={userBalance}
         notices={notices}
         inputDefs={inputDefs || []}
       />

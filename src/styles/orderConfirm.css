@@ -1,14 +1,486 @@
+/* ===== OrderConfirm 페이지 스타일 ===== */
 
-    * { box-sizing: border-box; }
+body {
+  background-color: #f5f5f5;
+}
 
-    body {
-      margin: 0;
-      background-color: #f5f5f5;
-      font-family: sans-serif;
-      color: #333;
-    }
+.confirm-wrapper {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 88px 24px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: #f5f5f5;
+}
 
-    /* ===== 글로벌 헤더 재사용 ===== */
+/* 뒤로 가기 버튼 */
+.back-button-wrapper {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.back-button {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.back-button:hover {
+  background: #f9f9f9;
+  border-color: #999;
+  color: #000;
+}
+
+.panel {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 16px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+}
+
+.subtxt {
+  font-size: 12px;
+  color: #777;
+  line-height: 1.5;
+}
+
+/* ===== 상단 요약 영역 ===== */
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.summary-box {
+  border: 1px solid #ddd;
+  background-color: #fafafa;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #444;
+}
+
+.summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.4;
+}
+
+.status-chip {
+  display: inline-block;
+  font-size: 11px;
+  line-height: 1.2;
+  border: 1px solid #555;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  padding: 3px 6px;
+  color: #000;
+  font-weight: 600;
+}
+
+.deadline-warning {
+  font-size: 11px;
+  color: #b33;
+  line-height: 1.4;
+  border: 1px solid #b33;
+  background-color: #fff5f5;
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+/* ===== 주문 목록(확정 직전 검수용) ===== */
+.orders-list-panel {
+  border: 1px solid #ddd;
+  background-color: #fff;
+  padding: 12px;
+}
+
+.orders-list-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.orders-list-header .subtxt {
+  text-align: right;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #777;
+}
+
+/* 개별 주문 블록 (아코디언) */
+.confirm-order {
+  border: 1px solid #ccc;
+  background-color: #fafafa;
+  margin-bottom: 12px;
+  position: relative;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.confirm-order:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  border-color: #999;
+}
+
+.confirm-order.active {
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.confirm-order-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  cursor: pointer;
+  position: relative;
+}
+
+.confirm-order-head:hover {
+  background-color: #f5f5f5;
+}
+
+.confirm-order.active .confirm-order-head {
+  background-color: #eff6ff;
+}
+
+.co-left {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #222;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.co-left .client-name {
+  font-weight: 600;
+  color: #000;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.co-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #000;
+}
+
+.co-right .co-price {
+  font-weight: 700;
+  color: #2563eb;
+  font-size: 13px;
+}
+
+/* 확장/축소 토글 버튼 */
+.expand-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: white;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.expand-toggle-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.confirm-order.active .expand-toggle-btn {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.confirm-order.active .expand-toggle-btn:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.toggle-icon {
+  transition: transform 0.3s ease;
+}
+
+.confirm-order.active .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* 리다이렉트 선택 모달 */
+.redirect-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.redirect-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.redirect-modal-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.redirect-modal-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 8px 0;
+}
+
+.redirect-modal-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.redirect-modal-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.redirect-btn {
+  padding: 20px 24px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.redirect-btn:hover {
+  border-color: #2563eb;
+  background: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.redirect-btn-primary {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.redirect-btn-primary:hover {
+  background: #dbeafe;
+  border-color: #1d4ed8;
+}
+
+.redirect-btn-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 4px;
+}
+
+.redirect-btn-desc {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.confirm-order-body {
+  border-top: 1px solid #ddd;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #444;
+  padding: 0px 12px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+}
+
+.confirm-order.active .confirm-order-body {
+  max-height: 400px;
+  opacity: 1;
+  pointer-events: auto;
+  padding: 12px;
+}
+
+/* ===== 하단 "확정" CTA 영역 ===== */
+.final-cta-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+  padding: 16px 24px 24px;
+  z-index: 999;
+}
+
+.final-cta-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #444;
+}
+
+.final-cta-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  row-gap: 8px;
+  margin-bottom: 16px;
+}
+
+.final-col {
+  text-align: center;
+  min-width: 200px;
+}
+
+.final-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.final-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+}
+
+.confirm-btn {
+  border: 2px solid #111;
+  background-color: #e0e0e0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 44px;
+  height: 48px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.confirm-btn:hover {
+  background-color: #ccc;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.confirm-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.legal-note {
+  font-size: 11px;
+  color: #777;
+  line-height: 1.4;
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .confirm-wrapper {
+    padding: 88px 12px 200px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .final-cta-summary-row {
+    flex-direction: column;
+  }
+
+  .final-col {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+
     .global-header {
       position: fixed;
       top: 0; left: 0; right: 0;

@@ -10,6 +10,7 @@
     gap: 16px;
     align-items: start;
     position: relative;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
 .left-column {
@@ -181,6 +182,31 @@
     font-weight: 600;
 }
 
+/* ===== 보유 포인트 표시 ===== */
+.user-balance-info {
+    border: 1px solid #d1d5db;
+    background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.balance-label {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.balance-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: #667eea;
+    line-height: 1.2;
+}
+
 /* ===== 공지 토글 ===== */
 .notice-toggle-btn {
     border: 1px solid #9ca3af;
@@ -194,6 +220,7 @@
     display: inline-block;
     transition: all 0.2s ease;
     margin-top: 12px;
+    color: #444;
 }
 
 .notice-toggle-btn:hover {
@@ -321,6 +348,13 @@
     margin-bottom: 0;
 }
 
+/* 수량 입력 row - 3개 필드를 균등하게 배치 */
+.order-form-row.quantity-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
 /* FormField 컴포넌트는 formField.css에서 스타일링됨 */
 .order-form-row .form-field {
     flex: 1 1 200px;
@@ -416,7 +450,9 @@
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    cursor: pointer;
+    cursor: default;
+    position: relative;
+    transition: background-color 0.2s ease;
 }
 
 .acc-summary-left {
@@ -468,6 +504,55 @@
     color: white;
 }
 
+.acc-edit-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 55px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    border: 1px solid #667eea;
+    background-color: #ffffff;
+    color: #667eea;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.acc-edit-btn:hover {
+    background-color: #667eea;
+    color: white;
+}
+
+.acc-detail-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    border: 1px solid #9ca3af;
+    background-color: #ffffff;
+    color: #6b7280;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.acc-detail-btn:hover {
+    background-color: #6b7280;
+    color: white;
+}
+
+.acc-edit-btn:hover {
+    background-color: #667eea;
+    color: white;
+}
+
 .acc-order-body {
     border-top: 1px solid #e5e7eb;
     padding: 14px;
@@ -479,13 +564,101 @@
     opacity: 0;
     overflow: hidden;
     pointer-events: none;
-    transition: max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
 }
 
 .acc-order.active .acc-order-body {
-    max-height: 250px;
+    max-height: 800px;
     opacity: 1;
     pointer-events: auto;
+    padding: 14px 14px 42px 14px;
+}
+
+/* ===== 주문 수정 인라인 폼 ===== */
+.edit-order-inline {
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.inline-field-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.field-label {
+    font-weight: 700;
+    color: #374151;
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+.field-value-readonly {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.inline-input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.inline-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.inline-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 2;
+}
+
+.save-edit-btn,
+.cancel-edit-btn {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid;
+    line-height: 1;
+}
+
+.save-edit-btn {
+    background-color: #ffffff;
+    color: #10b981;
+    border-color: #10b981;
+}
+
+.save-edit-btn:hover {
+    background-color: #10b981;
+    color: white;
+}
+
+.cancel-edit-btn {
+    background-color: #ffffff;
+    color: #6b7280;
+    border-color: #d1d5db;
+}
+
+.cancel-edit-btn:hover {
+    background-color: #6b7280;
+    color: white;
 }
 
 /* ===== 우측: 결제 요약 ===== */
@@ -519,14 +692,52 @@
 }
 
 .balance-row {
-    font-size: 12px;
-    color: #6b7280;
-    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     margin-bottom: 16px;
-    padding: 12px;
-    background-color: #f9fafb;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
+    padding: 14px;
+    background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+    border-radius: 8px;
+    border: 1.5px solid #e5e7eb;
+}
+
+.balance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.balance-item.balance-after {
+    padding-top: 8px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 4px;
+}
+
+.balance-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.balance-value {
+    font-weight: 700;
+    color: #374151;
+}
+
+.balance-value.deduct {
+    color: #dc2626;
+}
+
+.balance-value.sufficient {
+    color: #059669;
+    font-size: 15px;
+}
+
+.balance-value.insufficient {
+    color: #dc2626;
+    font-size: 15px;
 }
 
 .deadline-warning {
@@ -590,9 +801,9 @@
 }
 
 .badge-new-item {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1 0%, #1418ed 100%);
+    box-shadow: 0 4px 12px #1044b966;
 }
 
 /* ===== 반응형 ===== */

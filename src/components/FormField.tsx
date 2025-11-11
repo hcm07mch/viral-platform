@@ -83,13 +83,25 @@ export default function FormField({
   const renderInput = () => {
     switch (type) {
       case 'NUMBER':
+        // 필드별 quick add 값 설정
+        const getQuickAddValues = () => {
+          if (id === 'daily_qty') {
+            return [5, 10, 50, 100];
+          } else if (id === 'weeks') {
+            return [1, 2, 5, 10];
+          }
+          return [1, 5, 10, 50]; // 기본값
+        };
+
+        const quickAddValues = getQuickAddValues();
+
         return (
-          <div className="number-field-wrapper">
+          <div className="number-field-container">
             <div className="number-input-with-reset">
               <input
                 type="number"
                 id={id}
-                className="field-input"
+                className="field-input number-input"
                 placeholder={placeholder}
                 value={value || ''}
                 onChange={(e) => handleChange(e.target.value)}
@@ -98,46 +110,30 @@ export default function FormField({
                 disabled={disabled}
                 required={required}
               />
-              {value && (
-                <button
-                  type="button"
-                  className="reset-btn"
-                  onClick={handleReset}
-                  disabled={disabled}
-                  title="초기화"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              )}
+              <button
+                type="button"
+                className="reset-btn"
+                onClick={handleReset}
+                disabled={disabled || !value}
+                title="초기화"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
             </div>
             <div className="quick-add-buttons">
-              <button
-                type="button"
-                className="quick-add-btn"
-                onClick={() => handleQuickAdd(5)}
-                disabled={disabled}
-              >
-                +5
-              </button>
-              <button
-                type="button"
-                className="quick-add-btn"
-                onClick={() => handleQuickAdd(10)}
-                disabled={disabled}
-              >
-                +10
-              </button>
-              <button
-                type="button"
-                className="quick-add-btn"
-                onClick={() => handleQuickAdd(100)}
-                disabled={disabled}
-              >
-                +100
-              </button>
+              {quickAddValues.map((amount) => (
+                <button
+                  key={amount}
+                  type="button"
+                  className="quick-add-btn"
+                  onClick={() => handleQuickAdd(amount)}
+                  disabled={disabled}
+                >
+                  +{amount}
+                </button>
+              ))}
             </div>
           </div>
         );

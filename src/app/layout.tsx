@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
+import { AlertProvider } from "@/contexts/AlertContext";
 
 export const metadata: Metadata = {
   title: "AdOrder",
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        {children}
-        <Footer />
+        <AlertProvider>
+          {children}
+          <Footer />
+        </AlertProvider>
       </body>
     </html>
   );

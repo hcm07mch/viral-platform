@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import '@/styles/productDetail.css';
 import FormField from '@/components/FormField';
+import { useAlert } from '@/contexts/AlertContext';
 
 interface Product {
   id: string;
@@ -53,6 +55,7 @@ interface Props {
   product: Product;
   tierPrice: number;
   userTier: string;
+  userBalance: number;
   notices?: Notice[];
   inputDefs: InputDef[];
 }
@@ -61,13 +64,43 @@ export default function ProductDetailClient({
   product, 
   tierPrice, 
   userTier,
+  userBalance,
   notices = [],
   inputDefs = []
 }: Props) {
+  const router = useRouter();
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [editingData, setEditingData] = useState<Record<string, any>>({});
+  const { showAlert } = useAlert();
+
+  // orderConfirm에서 돌아왔을 때 주문 데이터 복원
+  useEffect(() => {
+    const pendingOrderStr = sessionStorage.getItem('pendingOrder');
+    if (pendingOrderStr) {
+      try {
+        const pendingOrder = JSON.parse(pendingOrderStr);
+        if (pendingOrder.productId === product.id && pendingOrder.items) {
+          // 주문 항목 복원
+          const restoredOrders: OrderItem[] = pendingOrder.items.map((item: any, index: number) => ({
+            id: `order-${Date.now()}-${index}`,
+            clientName: item.clientName,
+            dailyCount: item.dailyCount,
+            weeks: item.weeks,
+            totalCount: item.totalCount,
+            estimatedPrice: item.estimatedPrice,
+            details: item.details
+          }));
+          setOrders(restoredOrders);
+        }
+      } catch (err) {
+        console.error('주문 데이터 복원 오류:', err);
+      }
+    }
+  }, [product.id]);
 
   // 수량 관련 필드와 일반 필드 분리
   const quantityFields = inputDefs.filter(def => 
@@ -93,9 +126,66 @@ export default function ProductDetailClient({
 
   const deleteOrder = (orderId: string) => {
     setOrders(orders.filter(o => o.id !== orderId));
+    if (editingOrderId === orderId) {
+      setEditingOrderId(null);
+      setEditingData({});
+    }
+  };
+
+  const startEditOrder = (order: OrderItem) => {
+    setEditingOrderId(order.id);
+    setEditingData({ ...order.details });
+  };
+
+  const cancelEditOrder = () => {
+    setEditingOrderId(null);
+    setEditingData({});
+  };
+
+  const saveEditOrder = (orderId: string) => {
+    const updatedOrders = orders.map(order => {
+      if (order.id === orderId) {
+        const dailyCount = parseInt(editingData.daily_qty || '0');
+        const weeks = parseInt(editingData.weeks || '0');
+        const totalCount = dailyCount * 7 * weeks;
+        const estimatedPrice = totalCount * tierPrice;
+        
+        return {
+          ...order,
+          clientName: editingData.store_name || editingData.clientName || order.clientName,
+          dailyCount,
+          weeks,
+          totalCount,
+          estimatedPrice,
+          details: { ...editingData }
+        };
+      }
+      return order;
+    });
+    
+    setOrders(updatedOrders);
+    setEditingOrderId(null);
+    setEditingData({});
+    showAlert('주문 정보가 수정되었습니다', 'success');
   };
 
   const handleAddOrder = () => {
+    // 필수 항목 검증
+    const requiredFields = inputDefs.filter(def => def.required);
+    const missingFields: string[] = [];
+    
+    for (const field of requiredFields) {
+      const value = formData[field.field_key];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        missingFields.push(field.label);
+      }
+    }
+    
+    if (missingFields.length > 0) {
+      showAlert(`다음 필수 항목을 입력해주세요:\n${missingFields.join(', ')}`, 'error');
+      return;
+    }
+
     const dailyCount = parseInt(formData.daily_qty || formData.dailyCount || '0');
     const weeks = parseInt(formData.weeks || '0');
     const totalCount = dailyCount * 7 * weeks;
@@ -103,7 +193,7 @@ export default function ProductDetailClient({
 
     const newOrder: OrderItem = {
       id: `order-${Date.now()}`,
-      clientName: formData.clientName || formData.keyword || '미입력',
+      clientName: formData.store_name || formData.clientName || '미입력',
       dailyCount,
       weeks,
       totalCount,
@@ -119,7 +209,38 @@ export default function ProductDetailClient({
   const totalPrice = orders.reduce((sum, o) => sum + o.estimatedPrice, 0);
 
   const handleConfirmOrder = () => {
-    alert(`총 ${totalOrders}건, ${totalPrice.toLocaleString('ko-KR')}원의 주문을 확정합니다`);
+    if (orders.length === 0) {
+      showAlert('주문할 항목이 없습니다.', 'warn');
+      return;
+    }
+
+    if (userBalance < totalPrice) {
+      showAlert('포인트가 부족합니다.', 'error');
+      return;
+    }
+
+    // 주문 데이터를 세션 스토리지에 저장
+    const orderData = {
+      productId: product.id,
+      productName: product.name,
+      unitPrice: tierPrice,
+      totalQuantity: totalOrders,
+      totalPrice: totalPrice,
+      inputDefs: inputDefs, // field_key -> label 매핑을 위해 추가
+      items: orders.map(order => ({
+        clientName: order.clientName,
+        dailyCount: order.dailyCount,
+        weeks: order.weeks,
+        totalCount: order.totalCount,
+        estimatedPrice: order.estimatedPrice,
+        details: order.details
+      }))
+    };
+
+    sessionStorage.setItem('pendingOrder', JSON.stringify(orderData));
+    
+    // orderConfirm 페이지로 리다이렉트
+    router.push('/orderConfirm');
   };
 
   return (
@@ -223,7 +344,7 @@ export default function ProductDetailClient({
                 <span className="section-subtitle">주문 수량을 입력하고 예상 금액을 확인하세요</span>
               </div>
 
-              <div className="order-form-row">
+              <div className="order-form-row quantity-row">
                 {quantityFields.map((field) => (
                   <FormField
                     key={field.id}
@@ -237,9 +358,7 @@ export default function ProductDetailClient({
                     onChange={(value) => setFormData({ ...formData, [field.field_key]: value })}
                   />
                 ))}
-              </div>
-
-              <div className="order-form-row">
+                
                 <div className="calc-preview-box">
                   <div><strong>계산 방식</strong></div>
                   <div>(1일 수량) × 7일 × (주수)</div>
@@ -257,9 +376,7 @@ export default function ProductDetailClient({
           <div className="add-order-btn" onClick={handleAddOrder}>
             + 이 내용으로 주문 추가
           </div>
-          <div className="subtxt" style={{ marginTop: '8px' }}>
-            여러 고객사의 주문을 한번에 추가할 수 있습니다.
-          </div>
+
         </div>
       </section>
 
@@ -277,35 +394,108 @@ export default function ProductDetailClient({
                 주문을 추가해주세요
               </div>
             ) : (
-              orders.map((order) => (
-                <div 
-                  key={order.id} 
-                  className={`acc-order ${expandedOrders.has(order.id) ? 'active' : ''}`}
-                >
-                  <div className="acc-delete-btn" onClick={() => deleteOrder(order.id)}>
-                    삭제
-                  </div>
-                  <div className="acc-order-head" onClick={() => toggleOrderExpand(order.id)}>
-                    <div className="acc-summary-left">
-                      <div className="client-name">{order.clientName} ({product.name})</div>
-                      <div>{order.dailyCount}건/1일 · {order.weeks}주 진행</div>
+              orders.map((order) => {
+                const isEditing = editingOrderId === order.id;
+                const displayData = isEditing ? editingData : order.details;
+                
+                return (
+                  <div 
+                    key={order.id} 
+                    className={`acc-order ${expandedOrders.has(order.id) ? 'active' : ''}`}
+                  >
+                    <div className="acc-delete-btn" onClick={() => deleteOrder(order.id)}>
+                      삭제
                     </div>
-                    <div className="acc-summary-right">
-                      <div>총 {order.totalCount}건</div>
-                      <div className="acc-summary-price">
-                        예상 {order.estimatedPrice.toLocaleString('ko-KR')}원
+                    {!isEditing && (
+                      <div 
+                        className="acc-edit-btn" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // active가 아니면 펼치기
+                          if (!expandedOrders.has(order.id)) {
+                            const newExpanded = new Set(expandedOrders);
+                            newExpanded.add(order.id);
+                            setExpandedOrders(newExpanded);
+                          }
+                          startEditOrder(order);
+                        }}
+                      >
+                        수정
+                      </div>
+                    )}
+                    {!isEditing && (
+                      <div 
+                        className="acc-detail-btn" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleOrderExpand(order.id);
+                        }}
+                      >
+                        {expandedOrders.has(order.id) ? '접기' : '더보기'}
+                      </div>
+                    )}
+                    <div className="acc-order-head">
+                      <div className="acc-summary-left">
+                        <div className="client-name">{order.clientName} ({product.name})</div>
+                        <div>{order.dailyCount}건/1일 · {order.weeks}주 진행</div>
+                      </div>
+                      <div className="acc-summary-right">
+                        <div>총 {order.totalCount}건</div>
+                        <div className="acc-summary-price">
+                          예상 {order.estimatedPrice.toLocaleString('ko-KR')}원
+                        </div>
                       </div>
                     </div>
+                    <div className="acc-order-body">
+                      {isEditing ? (
+                        <div className="edit-order-inline">
+                          {inputDefs.map((field) => {
+                            const value = displayData[field.field_key];
+                            
+                            return (
+                              <div key={field.id} className="inline-field-row">
+                                <span className="field-label">{field.label}:</span>
+                                <input
+                                  type="text"
+                                  className="inline-input"
+                                  value={value || ''}
+                                  onChange={(e) => setEditingData({ ...editingData, [field.field_key]: e.target.value })}
+                                  placeholder={`${field.label} 입력`}
+                                />
+                              </div>
+                            );
+                          })}
+                          <div className="inline-actions">
+                            <button 
+                              className="save-edit-btn"
+                              onClick={() => saveEditOrder(order.id)}
+                            >
+                              저장
+                            </button>
+                            <button 
+                              className="cancel-edit-btn"
+                              onClick={cancelEditOrder}
+                            >
+                              취소
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {inputDefs.map((field) => {
+                            const value = order.details[field.field_key];
+                            return (
+                              <div key={field.id}>
+                                <strong>{field.label}:</strong> {value || '-'}<br/>
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="acc-order-body">
-                    매체: {order.details.platform || '-'}<br/>
-                    키워드: {order.details.keywords || '-'}<br/>
-                    플레이스 URL: {order.details.placeUrl || '-'}<br/>
-                    스토어 URL: {order.details.storeUrl || '-'}<br/>
-                    마감 규칙: 15:00 이후 익일 접수
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -322,8 +512,20 @@ export default function ProductDetailClient({
           </div>
 
           <div className="balance-row">
-            보유 포인트 조회 중..<br/>
-            차감 예상: {totalPrice.toLocaleString('ko-KR')} P
+            <div className="balance-item">
+              <span className="balance-label">보유 포인트</span>
+              <span className="balance-value">{userBalance.toLocaleString('ko-KR')} P</span>
+            </div>
+            <div className="balance-item">
+              <span className="balance-label">차감 예상</span>
+              <span className="balance-value deduct">-{totalPrice.toLocaleString('ko-KR')} P</span>
+            </div>
+            <div className="balance-item balance-after">
+              <span className="balance-label">차감 후 잔여</span>
+              <span className={`balance-value ${(userBalance - totalPrice) < 0 ? 'insufficient' : 'sufficient'}`}>
+                {(userBalance - totalPrice).toLocaleString('ko-KR')} P
+              </span>
+            </div>
           </div>
 
           <div className="deadline-warning">
