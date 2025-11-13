@@ -152,7 +152,7 @@ export default function ProductDetailClient({
         
         return {
           ...order,
-          clientName: editingData.store_name || editingData.clientName || order.clientName,
+          clientName: editingData.client_name || editingData.clientName || order.clientName,
           dailyCount,
           weeks,
           totalCount,
@@ -193,7 +193,7 @@ export default function ProductDetailClient({
 
     const newOrder: OrderItem = {
       id: `order-${Date.now()}`,
-      clientName: formData.store_name || formData.clientName || '미입력',
+      clientName: formData.client_name || formData.clientName || '미입력',
       dailyCount,
       weeks,
       totalCount,
@@ -207,6 +207,15 @@ export default function ProductDetailClient({
 
   const totalOrders = orders.reduce((sum, o) => sum + o.totalCount, 0);
   const totalPrice = orders.reduce((sum, o) => sum + o.estimatedPrice, 0);
+
+  // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const handleConfirmOrder = () => {
     if (orders.length === 0) {
@@ -294,7 +303,7 @@ export default function ProductDetailClient({
               </div>
               <div className="product-price-highlight">
                 <div className="price-main-detail">
-                  <div className="tier-price-detail">{tierPrice.toLocaleString('ko-KR')}원</div>
+                  <div className="tier-price-detail">{tierPrice.toLocaleString('ko-KR')} 🪙</div>
                   {product.unit && (
                     <div className="price-unit-detail">/ {product.unit}</div>
                   )}
@@ -332,6 +341,7 @@ export default function ProductDetailClient({
                     required={field.required}
                     value={formData[field.field_key] || ''}
                     onChange={(value) => setFormData({ ...formData, [field.field_key]: value })}
+                    min={field.field_type === 'DATE' ? getTodayDate() : undefined}
                   />
                 ))}
               </div>
@@ -366,7 +376,7 @@ export default function ProductDetailClient({
                     예: {formData.daily_qty || 0}건 × 7일 × {formData.weeks || 0}주 = 총 {(parseInt(formData.daily_qty || '0') * 7 * parseInt(formData.weeks || '0'))}건
                   </div>
                   <div style={{ fontSize: '11px', color: '#777', marginTop: '6px' }}>
-                    예상 발주 금액: {((parseInt(formData.daily_qty || '0') * 7 * parseInt(formData.weeks || '0')) * tierPrice).toLocaleString('ko-KR')}원
+                    예상 발주 금액: {((parseInt(formData.daily_qty || '0') * 7 * parseInt(formData.weeks || '0')) * tierPrice).toLocaleString('ko-KR')} 🪙
                   </div>
                 </div>
               </div>
@@ -442,7 +452,7 @@ export default function ProductDetailClient({
                       <div className="acc-summary-right">
                         <div>총 {order.totalCount}건</div>
                         <div className="acc-summary-price">
-                          예상 {order.estimatedPrice.toLocaleString('ko-KR')}원
+                          예상 {order.estimatedPrice.toLocaleString('ko-KR')} 🪙
                         </div>
                       </div>
                     </div>
@@ -452,15 +462,30 @@ export default function ProductDetailClient({
                           {inputDefs.map((field) => {
                             const value = displayData[field.field_key];
                             
+                            // 필드 타입에 따라 적절한 input type 결정
+                            const getInputType = () => {
+                              switch (field.field_type) {
+                                case 'DATE':
+                                  return 'date';
+                                case 'NUMBER':
+                                  return 'number';
+                                case 'URL':
+                                  return 'url';
+                                default:
+                                  return 'text';
+                              }
+                            };
+
                             return (
                               <div key={field.id} className="inline-field-row">
                                 <span className="field-label">{field.label}:</span>
                                 <input
-                                  type="text"
+                                  type={getInputType()}
                                   className="inline-input"
                                   value={value || ''}
                                   onChange={(e) => setEditingData({ ...editingData, [field.field_key]: e.target.value })}
                                   placeholder={`${field.label} 입력`}
+                                  min={field.field_type === 'DATE' ? getTodayDate() : undefined}
                                 />
                               </div>
                             );
@@ -508,7 +533,7 @@ export default function ProductDetailClient({
 
           <div className="summary-row">
             <div>예상 총 금액</div>
-            <div className="summary-total">{totalPrice.toLocaleString('ko-KR')}원</div>
+            <div className="summary-total">{totalPrice.toLocaleString('ko-KR')} 🪙</div>
           </div>
 
           <div className="balance-row">

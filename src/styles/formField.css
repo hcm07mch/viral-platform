@@ -113,6 +113,23 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Date input 캘린더 아이콘 색상 변경 */
+.field-input[type="date"] {
+  color-scheme: light;
+  cursor: pointer;
+}
+
+.field-input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.5) sepia(1) saturate(5) hue-rotate(220deg);
+  opacity: 0.8;
+}
+
+.field-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(0.4) sepia(1) saturate(6) hue-rotate(220deg);
+}
+
 /* Textarea specific styles */
 .field-textarea {
   resize: vertical;

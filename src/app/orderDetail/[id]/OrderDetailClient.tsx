@@ -6,16 +6,6 @@ import '@/styles/orderDetail.css';
 
 type OrderStatus = 'received' | 'pause' | 'running' | 'done' | 'cancelled' | 'refunded';
 
-type OrderItem = {
-  id: string;
-  client_name: string;
-  daily_qty: number;
-  weeks: number;
-  total_qty: number;
-  item_price: number;
-  item_details: Record<string, any>;
-};
-
 type InputDef = {
   id: number;
   field_key: string;
@@ -23,18 +13,33 @@ type InputDef = {
   field_type: string;
 };
 
-type OrderDetail = {
-  id: string;
+type OrderItemDetail = {
+  item_id: string;
   order_id: string;
+  order_number: string;
   product_name: string;
-  status: OrderStatus;
-  start_date: string;
-  end_date: string;
-  period_text: string;
+  client_name: string;
+  daily_qty: number;
+  weeks: number;
   total_qty: number;
-  total_price: number;
+  unit_price: number;
+  item_price: number;
+  status: OrderStatus;
   created_at: string;
-  order_details: Record<string, any>;
+  item_details: Record<string, any>;
+  unit?: string;
+};
+
+type Message = {
+  id: string;
+  message: string;
+  message_type: string;
+  author_role: 'user' | 'admin';
+  is_read: boolean;
+  created_at: string;
+  profiles: {
+    email: string;
+  };
 };
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -49,39 +54,221 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 export default function OrderDetailClient() {
   const params = useParams();
   const router = useRouter();
-  const orderId = params.id as string;
+  const itemId = params.id as string;
 
-  const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [items, setItems] = useState<OrderItem[]>([]);
+  const [itemDetail, setItemDetail] = useState<OrderItemDetail | null>(null);
   const [inputDefs, setInputDefs] = useState<InputDef[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeAccordions, setActiveAccordions] = useState<Set<string>>(new Set(['timeline']));
+  const [activeAccordions, setActiveAccordions] = useState<Set<string>>(new Set(['details', 'timeline', 'messages']));
   const [showRefundModal, setShowRefundModal] = useState(false);
+  
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    if (orderId) {
-      fetchOrderDetail();
+    if (itemId) {
+      fetchItemDetail();
+      fetchMessages();
     }
-  }, [orderId]);
+  }, [itemId]);
 
-  const fetchOrderDetail = async () => {
+  // 1분마다 현재 시간 업데이트하여 상대 시간 갱신
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // 60초
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Realtime 구독
+  useEffect(() => {
+    if (!itemId) return;
+
+    const setupRealtime = async () => {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+
+      console.log('=== Realtime 구독 시작 ===');
+      console.log('Item ID:', itemId);
+
+      // 메시지 실시간 구독 - 필터 제거하고 모든 이벤트 수신
+      const channel = supabase
+        .channel(`order_item_messages_${itemId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'order_item_messages',
+            filter: `order_item_id=eq.${itemId}`
+          },
+          (payload) => {
+            console.log('🔥 메시지 변경 감지:', payload.eventType);
+            console.log('Payload:', payload);
+            
+            if (payload.eventType === 'INSERT') {
+              console.log('✅ 새 메시지 추가');
+              const newMsg = payload.new as any;
+              setMessages(prev => [...prev, {
+                id: newMsg.id,
+                message: newMsg.message,
+                message_type: newMsg.message_type,
+                author_role: newMsg.author_role,
+                is_read: newMsg.is_read,
+                created_at: newMsg.created_at,
+                profiles: { email: '' }
+              }]);
+            } else if (payload.eventType === 'UPDATE') {
+              console.log('✅ 메시지 업데이트');
+              const updatedMsg = payload.new as any;
+              setMessages(prev => 
+                prev.map(msg =>
+                  msg.id === updatedMsg.id 
+                    ? { ...msg, is_read: updatedMsg.is_read } 
+                    : msg
+                )
+              );
+            } else if (payload.eventType === 'DELETE') {
+              console.log('✅ 메시지 삭제');
+              const deletedMsg = payload.old as any;
+              setMessages(prev => prev.filter(msg => msg.id !== deletedMsg.id));
+            }
+          }
+        )
+        .subscribe((status, err) => {
+          console.log('구독 상태:', status);
+          if (err) console.error('구독 에러:', err);
+        });
+
+      return () => {
+        console.log('=== Realtime 구독 해제 ===');
+        supabase.removeChannel(channel);
+      };
+    };
+
+    const cleanup = setupRealtime();
+    return () => {
+      cleanup.then(fn => fn && fn());
+    };
+  }, [itemId]);
+
+  const fetchItemDetail = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/orders/${orderId}`);
+      const response = await fetch(`/api/orders/items/${itemId}`);
       if (!response.ok) {
-        throw new Error('주문 상세 정보를 불러오는데 실패했습니다.');
+        throw new Error('주문 항목 정보를 불러오는데 실패했습니다.');
       }
       const data = await response.json();
-      setOrder(data.order);
-      setItems(data.items);
-      setInputDefs(data.inputDefs);
+      setItemDetail(data.item);
+      setInputDefs(data.inputDefs || []);
     } catch (error) {
-      console.error('주문 상세 조회 오류:', error);
-      alert('주문 정보를 불러올 수 없습니다.');
+      console.error('주문 항목 조회 오류:', error);
+      alert('주문 항목 정보를 불러올 수 없습니다.');
       router.push('/orderList');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const response = await fetch(`/api/orders/items/${itemId}/messages`);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.error('메시지 조회 오류:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim()) return;
+    
+    setIsSendingMessage(true);
+    try {
+      const response = await fetch(`/api/orders/items/${itemId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: newMessage.trim() })
+      });
+      
+      if (response.ok) {
+        // Realtime으로 자동 업데이트되므로 수동 추가 제거
+        setNewMessage('');
+      } else {
+        alert('메시지 전송에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('메시지 전송 오류:', error);
+      alert('메시지 전송 중 오류가 발생했습니다.');
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!confirm('이 메시지를 삭제하시겠습니까?')) return;
+
+    try {
+      const response = await fetch(`/api/orders/items/${itemId}/messages/${messageId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        alert('메시지 삭제에 실패했습니다.');
+      }
+      // Realtime으로 자동 업데이트됨
+    } catch (error) {
+      console.error('메시지 삭제 오류:', error);
+      alert('메시지 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  const formatMessageTime = (dateString: string) => {
+    const messageDate = new Date(dateString);
+    const diffInSeconds = Math.floor((currentTime.getTime() - messageDate.getTime()) / 1000);
+    
+    // 1분 미만
+    if (diffInSeconds < 60) {
+      return '방금 전';
+    }
+    
+    // 1시간 미만
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes}분 전`;
+    }
+    
+    // 24시간 미만
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours}시간 전`;
+    }
+    
+    // 오늘인지 확인
+    const isToday = currentTime.getFullYear() === messageDate.getFullYear() &&
+                    currentTime.getMonth() === messageDate.getMonth() &&
+                    currentTime.getDate() === messageDate.getDate();
+    
+    if (isToday) {
+      return messageDate.toLocaleString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // 오늘이 아니면 날짜 포함
+    return messageDate.toLocaleString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const toggleAccordion = (id: string) => {
@@ -97,9 +284,24 @@ export default function OrderDetailClient() {
   };
 
   const handleRefundConfirm = () => {
-    console.log('환불 신청:', order?.order_id);
+    console.log('환불 신청:', itemDetail?.item_id);
     setShowRefundModal(false);
     router.push('/refundRequest');
+  };
+
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('ko-KR') + '원';
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (isLoading) {
@@ -110,10 +312,10 @@ export default function OrderDetailClient() {
     );
   }
 
-  if (!order) {
+  if (!itemDetail) {
     return (
       <main style={{ padding: '100px 24px', textAlign: 'center' }}>
-        주문 정보를 찾을 수 없습니다.
+        주문 항목 정보를 찾을 수 없습니다.
       </main>
     );
   }
@@ -124,279 +326,279 @@ export default function OrderDetailClient() {
         {/* 상단 요약바 */}
         <section className="summary-bar">
           <div className="summary-card">
-            <div className="summary-label">주문번호</div>
-            <div className="summary-value">{order.order_id}</div>
+            <div className="summary-label">업체명</div>
+            <div className="summary-value highlight">{itemDetail.client_name}</div>
+          </div>
+          <div className="summary-card">
+            <div className="summary-label">키워드</div>
+            <div className="summary-value highlight">
+              {itemDetail.item_details?.keyword || '-'}
+            </div>
+          </div>
+          <div className="summary-card">
+            <div className="summary-label">상품명</div>
+            <div className="summary-value">{itemDetail.product_name}</div>
           </div>
           <div className="summary-card">
             <div className="summary-label">상태</div>
             <div className="summary-value">
-              <span className="status-chip" data-status={order.status}>
-                {STATUS_LABELS[order.status]}
+              <span className="status-chip" data-status={itemDetail.status}>
+                {STATUS_LABELS[itemDetail.status]}
               </span>
             </div>
           </div>
-          <div className="summary-card">
-            <div className="summary-label">기간</div>
-            <div className="summary-value">{order.period_text}</div>
-          </div>
-          <div className="summary-card">
-            <div className="summary-label">총량 / 총액</div>
-            <div className="summary-value">
-              {order.total_qty}건 / {order.total_price.toLocaleString('ko-KR')}원
-            </div>
-          </div>
         </section>
 
-        {/* 좌측: 타임라인 / 커뮤니케이션 / 감사로그 */}
-        <section className="panel">
-          <div className="panel-header">
-            <div className="panel-title">상태 타임라인</div>
-            <div className="subtxt">접수→원청전달→구동시작→중간점검→완료</div>
-          </div>
-
-          {/* 타임라인 아코디언 */}
-          <div className={`accordion ${activeAccordions.has('timeline') ? 'active' : ''}`}>
-            <div className="acc-head" onClick={() => toggleAccordion('timeline')}>
-              <div className="acc-head-left">타임라인</div>
-              <div className="pill">최근 30일</div>
+        {/* 메인 콘텐츠 */}
+        <div className="detail-content">
+          {/* 타임라인 */}
+          <section className="detail-section">
+            <div 
+              className="section-header"
+              onClick={() => toggleAccordion('timeline')}
+            >
+              <h2>상태 타임라인</h2>
+              <span className="toggle-icon">{activeAccordions.has('timeline') ? '▲' : '▼'}</span>
             </div>
-            <div className="acc-body">
-              <div className="timeline-item">
-                <div className="timeline-date">{order.start_date}</div>
-                <div className="timeline-content">
-                  접수 완료 <span className="badge">주문 생성</span>
-                </div>
-              </div>
-              <div className="timeline-item">
-                <div className="timeline-date">{order.start_date}</div>
-                <div className="timeline-content">
-                  원청 전달 대기중 <span className="badge">담당자: 시스템</span>
-                </div>
-              </div>
-              <div className="timeline-item">
-                <div className="timeline-date">진행중</div>
-                <div className="timeline-content">
-                  현재 상태: {STATUS_LABELS[order.status]}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 커뮤니케이션 아코디언 */}
-          <div className={`accordion ${activeAccordions.has('communication') ? 'active' : ''}`}>
-            <div className="acc-head" onClick={() => toggleAccordion('communication')}>
-              <div className="acc-head-left">커뮤니케이션</div>
-              <div className="pill">파일 첨부 가능</div>
-            </div>
-            <div className="acc-body">
-              <div className="chat">
-                <div className="author">System</div>
-                <div className="bubble">주문이 정상적으로 접수되었습니다. 담당자가 확인 후 진행 예정입니다.</div>
-              </div>
-              <div className="cta-row">
-                <div className="btn">파일 첨부</div>
-                <div className="btn primary">메시지 보내기</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 감사 로그 아코디언 */}
-          <div className={`accordion ${activeAccordions.has('audit') ? 'active' : ''}`}>
-            <div className="acc-head" onClick={() => toggleAccordion('audit')}>
-              <div className="acc-head-left">감사 로그 (이력)</div>
-              <div className="pill">필드 변경</div>
-            </div>
-            <div className="acc-body">
-              <div className="log-row">
-                {new Date(order.created_at).toLocaleString('ko-KR')} — 주문 생성 (by Client)
-              </div>
-              <div className="log-row">
-                {new Date(order.created_at).toLocaleString('ko-KR')} — 상태: {STATUS_LABELS[order.status]} (by System)
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 우측: 동적 필드 / 정산 / 액션 */}
-        <aside className="panel">
-          <div className="panel-header">
-            <div className="panel-title">주문 파라미터</div>
-            <div className="subtxt">상품 설정에 따른 동적 필드</div>
-          </div>
-
-          {/* 동적 필드 그리드 */}
-          <div className="form-grid">
-            {items.length > 0 && items[0].item_details && Object.entries(items[0].item_details).map(([key, value]) => {
-              const fieldDef = inputDefs.find(def => def.field_key === key);
-              const displayLabel = fieldDef?.label || key;
-              
-              return (
-                <div key={key} className="form-field">
-                  <div className="field-label-row">
-                    <div className="field-label">{displayLabel}</div>
-                    <div className="help-icon">?</div>
-                    <div className="help-tooltip">
-                      {fieldDef?.field_type === 'TEXT' && '텍스트 입력 필드'}
-                      {fieldDef?.field_type === 'NUMBER' && '숫자 입력 필드'}
-                      {fieldDef?.field_type === 'URL' && 'URL 주소'}
-                      {!fieldDef && '추가 정보'}
+            <div className={`section-content-wrapper ${activeAccordions.has('timeline') ? 'open' : ''}`}>
+              <div className="section-content">
+                <div className="timeline">
+                  <div className="timeline-item">
+                    <div className="timeline-marker"></div>
+                    <div className="timeline-content">
+                      <div className="timeline-date">{formatDate(itemDetail.created_at)}</div>
+                      <div className="timeline-text">주문 항목 생성</div>
+                      <div className="timeline-badge">{STATUS_LABELS.received}</div>
                     </div>
                   </div>
-                  <div className="field-value">{String(value) || '-'}</div>
-                </div>
-              );
-            })}
-            
-            {/* 발행수/기간 */}
-            <div className="form-field">
-              <div className="field-label-row">
-                <div className="field-label">발행수 (1일)</div>
-                <div className="help-icon">?</div>
-                <div className="help-tooltip">하루 기준 수량. 청구는 ×7×주수.</div>
-              </div>
-              <div className="field-value">
-                {items[0]?.daily_qty || 0}건/1일 · {items[0]?.weeks || 0}주 (총 {order.total_qty})
-              </div>
-            </div>
-          </div>
-
-          {/* 주문 항목 리스트 */}
-          <div className="panel-header" style={{ marginTop: '16px' }}>
-            <div className="panel-title">주문 항목 상세</div>
-            <div className="subtxt">총 {items.length}건</div>
-          </div>
-
-          {items.map((item) => (
-            <div key={item.id} className="order-item-card">
-              <div className="item-header">
-                <div className="item-title">{item.client_name}</div>
-                <div className="item-summary">
-                  {item.daily_qty}건/일 · {item.weeks}주 · 총 {item.total_qty}건
-                </div>
-              </div>
-              <div className="item-details">
-                {Object.entries(item.item_details).map(([key, value]) => {
-                  const fieldDef = inputDefs.find(def => def.field_key === key);
-                  const displayLabel = fieldDef?.label || key;
-                  
-                  return (
-                    <div key={key} className="detail-row">
-                      <span className="detail-label">{displayLabel}:</span>
-                      <span className="detail-value">{String(value)}</span>
+                  <div className="timeline-item">
+                    <div className="timeline-marker"></div>
+                    <div className="timeline-content">
+                      <div className="timeline-date">진행중</div>
+                      <div className="timeline-text">현재 상태</div>
+                      <div className="timeline-badge">{STATUS_LABELS[itemDetail.status]}</div>
                     </div>
-                  );
-                })}
-              </div>
-              <div className="item-footer">
-                <span className="item-price">{item.item_price.toLocaleString('ko-KR')}원</span>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
+          </section>
 
-          {/* 증빙/리포트 */}
-          <div className="panel-header" style={{ marginTop: '16px' }}>
-            <div className="panel-title">증빙 & 리포트</div>
-            <div className="subtxt">링크/이미지/CSV/PDF</div>
-          </div>
-          <div className="proof-list">
-            <div className="proof-item">준비중</div>
-            <div className="proof-item">준비중</div>
-            <div className="proof-item">준비중</div>
-          </div>
-
-          {/* 정산 정보 */}
-          <div className="panel-header" style={{ marginTop: '16px' }}>
-            <div className="panel-title">정산 정보</div>
-            <div className="subtxt">포인트 트랜잭션 요약</div>
-          </div>
-          <table className="calc-table">
-            <thead>
-              <tr>
-                <th>항목</th>
-                <th>수량</th>
-                <th>단가</th>
-                <th>금액</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1일 발행</td>
-                <td>{items[0]?.daily_qty || 0}</td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td>× 7일</td>
-                <td>{(items[0]?.daily_qty || 0) * 7}</td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td>× 주수({items[0]?.weeks || 0})</td>
-                <td>{order.total_qty}</td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-              <tr>
-                <td colSpan={3} style={{ textAlign: 'right' }}><b>총합</b></td>
-                <td><b>{order.total_price.toLocaleString('ko-KR')}원</b></td>
-              </tr>
-            </tbody>
-          </table>
-          
-          <div className="cta-row" style={{ marginTop: '10px' }}>
-            <div className="btn" onClick={() => router.push('/pointWallet')}>
-              포인트 내역 보기
-            </div>
-            <div className="btn" onClick={() => alert('준비중입니다.')}>
-              재주문(복제)
-            </div>
-            <div className="btn" onClick={() => alert('준비중입니다.')}>
-              일시중지
-            </div>
+          {/* 관리자 소통 */}
+          <section className="detail-section">
             <div 
-              className="btn primary" 
+              className="section-header"
+              onClick={() => toggleAccordion('messages')}
+            >
+              <h2>관리자 소통</h2>
+              <span className="toggle-icon">{activeAccordions.has('messages') ? '▲' : '▼'}</span>
+            </div>
+            <div className={`section-content-wrapper ${activeAccordions.has('messages') ? 'open' : ''}`}>
+              <div className="section-content">
+                <div className="messages-container">
+                  {messages.length > 0 ? (
+                    <div className="messages-list">
+                      {messages.map((msg) => (
+                        <div key={msg.id} className={`message-wrapper ${msg.author_role}`}>
+                          {msg.is_read && msg.author_role === 'user' && (
+                            <div className="message-read-status">읽음</div>
+                          )}
+                          <div className="message-content">
+                            <div className="message-header">
+                              <span className="message-author">
+                                {msg.author_role === 'admin' ? '관리자' : '나'}
+                              </span>
+                              <div className="message-header-right">
+                                <span className="message-time">
+                                  {formatMessageTime(msg.created_at)}
+                                </span>
+                                {msg.author_role === 'user' && (
+                                  <button
+                                    className="message-delete-btn"
+                                    onClick={() => handleDeleteMessage(msg.id)}
+                                    title="삭제"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <div className={`message-bubble ${msg.author_role}`}>
+                              <div className="message-text">{msg.message}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-message">아직 메시지가 없습니다.</div>
+                  )}
+                  
+                  <div className="message-input-area">
+                    <textarea
+                      className="message-input"
+                      placeholder="메시지를 입력하세요..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      rows={3}
+                    />
+                    <button 
+                      className="send-message-btn"
+                      onClick={handleSendMessage}
+                      disabled={isSendingMessage || !newMessage.trim()}
+                    >
+                      {isSendingMessage ? '전송중...' : '전송'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 기본 정보 */}
+          <section className="detail-section">
+            <div 
+              className="section-header"
+              onClick={() => toggleAccordion('basic')}
+            >
+              <h2>기본 정보</h2>
+              <span className="toggle-icon">{activeAccordions.has('basic') ? '▲' : '▼'}</span>
+            </div>
+            <div className={`section-content-wrapper ${activeAccordions.has('basic') ? 'open' : ''}`}>
+              <div className="section-content">
+                <div className="info-grid">
+                  <div className="info-row">
+                    <span className="info-label">항목 ID</span>
+                    <span className="info-value mono">#{itemDetail.item_id.slice(0, 8)}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">주문서 ID</span>
+                    <span className="info-value mono">{itemDetail.order_number}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">1일 수량</span>
+                    <span className="info-value">{itemDetail.daily_qty}{itemDetail.unit || '건'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">진행 주 수</span>
+                    <span className="info-value">{itemDetail.weeks}주 ({itemDetail.weeks * 7}일)</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">총 수량</span>
+                    <span className="info-value">{itemDetail.total_qty}{itemDetail.unit || '건'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">단가</span>
+                    <span className="info-value">{formatCurrency(itemDetail.unit_price)}</span>
+                  </div>
+                  <div className="info-row total-row">
+                    <span className="info-label">항목 금액</span>
+                    <span className="info-value price">{formatCurrency(itemDetail.item_price)}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">주문 일시</span>
+                    <span className="info-value">{formatDate(itemDetail.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 상세 입력 정보 */}
+          <section className="detail-section">
+            <div 
+              className="section-header"
+              onClick={() => toggleAccordion('details')}
+            >
+              <h2>상세 입력 정보</h2>
+              <span className="toggle-icon">{activeAccordions.has('details') ? '▲' : '▼'}</span>
+            </div>
+            <div className={`section-content-wrapper ${activeAccordions.has('details') ? 'open' : ''}`}>
+              <div className="section-content">
+                {Object.keys(itemDetail.item_details).length > 0 ? (
+                  <div className="details-grid">
+                    {Object.entries(itemDetail.item_details).map(([key, value]) => {
+                      const def = inputDefs.find(d => d.field_key === key);
+                      const label = def?.label || key;
+                      
+                      // 키워드 필드 렌더링
+                      if (key === 'keyword') {
+                        return (
+                          <div key={key} className="detail-item keyword-item">
+                            <span className="detail-label">{label}</span>
+                            <span className="detail-value keyword-value">{String(value)}</span>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div key={key} className="detail-item">
+                          <span className="detail-label">{label}</span>
+                          <span className="detail-value">{String(value)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-message">추가 입력 정보가 없습니다.</div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* 액션 버튼 */}
+          <section className="action-buttons">
+            <button 
+              className="back-button"
+              onClick={() => router.push('/orderList')}
+            >
+              ← 목록으로
+            </button>
+            <button 
+              className="refund-button"
               onClick={() => setShowRefundModal(true)}
             >
-              환불 신청
-            </div>
-          </div>
-        </aside>
-
-        {/* 액션 버튼 영역 */}
-        <section className="action-bar">
-          <button 
-            className="btn-secondary"
-            onClick={() => router.push('/orderList')}
-          >
-            목록으로
-          </button>
-          <button 
-            className="btn-primary"
-            onClick={() => setShowRefundModal(true)}
-          >
-            환불 신청
-          </button>
-        </section>
+              중단 신청
+            </button>
+          </section>
+        </div>
       </main>
 
-      {/* 환불 재확인 모달 */}
-      <div className={`modal-backdrop ${showRefundModal ? 'active' : ''}`}>
-        <div className="modal" role="dialog" aria-modal="true">
-          <h3>환불 신청을 진행할까요?</h3>
-          <div>
-            주문번호: <b>{order.order_id}</b><br/>
-            현재상태: <b>{STATUS_LABELS[order.status]}</b><br/>
-            <div className="subtxt" style={{ marginTop: '8px' }}>
-              이미 집행된 부분은 환불되지 않을 수 있습니다. 계속 진행하시겠습니까?
+      {/* 환불/중단 신청 모달 */}
+      {showRefundModal && (
+        <div className="modal-backdrop" onClick={() => setShowRefundModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>주문 항목 중단 신청</h3>
+            <p>항목번호: <strong>#{itemDetail.item_id.slice(0, 8)}</strong></p>
+            <p>업체명: <strong>{itemDetail.client_name}</strong></p>
+            <p>금액: <strong>{formatCurrency(itemDetail.item_price)}</strong></p>
+            <div className="modal-warning">
+              중단 신청 후 관리자 검토가 진행됩니다.<br/>
+              이미 진행된 부분은 환불이 제한될 수 있습니다.
+            </div>
+            <div className="modal-buttons">
+              <button 
+                className="cancel-btn"
+                onClick={() => setShowRefundModal(false)}
+              >
+                취소
+              </button>
+              <button 
+                className="confirm-btn"
+                onClick={handleRefundConfirm}
+              >
+                중단 신청 확정
+              </button>
             </div>
           </div>
-          <div className="footer">
-            <button className="btn" onClick={() => setShowRefundModal(false)}>취소</button>
-            <button className="btn primary" onClick={handleRefundConfirm}>환불 신청 확정</button>
-          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

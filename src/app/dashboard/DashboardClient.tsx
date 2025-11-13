@@ -85,7 +85,7 @@ export default function DashboardClient({
         <div className="card" id="pointCard">
           <div className="card-title">보유 포인트</div>
           <div className="card-value point-value">
-            {pointBalance.toLocaleString()} P
+            {pointBalance.toLocaleString()} 🪙
           </div>
           <div className="card-subtext">
             주문 시 자동 차감 / 환불 시 자동 복구

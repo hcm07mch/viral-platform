@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total_price NUMERIC(10, 2) NOT NULL,  -- 총 가격
   
   -- 주문 상세 정보 (JSON 형태)
-  -- 예: {"store_name": "가게명", "keyword": "키워드", "daily_qty": 10, "weeks": 2, "region": "서울", "memo": "메모"}
+  -- 예: {"client_name": "가게명", "keyword": "키워드", "daily_qty": 10, "weeks": 2, "region": "서울", "memo": "메모"}
   order_details JSONB NOT NULL DEFAULT '{}',
   
   -- 메타 정보
@@ -213,8 +213,8 @@ VALUES (
 -- 2. order_items 테이블에 개별 항목들 추가
 INSERT INTO order_items (order_id, client_name, daily_qty, weeks, total_qty, unit_price, item_price, item_details)
 VALUES 
-  (order_id_var, '가게1', 10, 2, 140, 100, 14000, '{"store_name": "가게1", ...}'),
-  (order_id_var, '가게2', 5, 1, 35, 100, 3500, '{"store_name": "가게2", ...}');
+  (order_id_var, '가게1', 10, 2, 140, 100, 14000, '{"client_name": "가게1", ...}'),
+  (order_id_var, '가게2', 5, 1, 35, 100, 3500, '{"client_name": "가게2", ...}');
 
 -- 3. profiles의 balance 차감
 UPDATE profiles

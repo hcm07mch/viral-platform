@@ -25,8 +25,8 @@ export interface FormFieldProps {
   required?: boolean;
   options?: { value: string; label: string }[]; // SELECT, MULTISELECT용
   accept?: string; // FILE, IMAGE용
-  min?: number; // NUMBER용
-  max?: number; // NUMBER용
+  min?: number | string; // NUMBER, DATE용
+  max?: number | string; // NUMBER, DATE용
   disabled?: boolean;
 }
 
@@ -188,6 +188,8 @@ export default function FormField({
             className="field-input"
             value={value || ''}
             onChange={(e) => handleChange(e.target.value)}
+            min={typeof min === 'string' ? min : undefined}
+            max={typeof max === 'string' ? max : undefined}
             disabled={disabled}
             required={required}
           />

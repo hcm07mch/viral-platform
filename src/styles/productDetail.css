@@ -131,7 +131,6 @@
     font-weight: 800;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
     letter-spacing: -1px;
     line-height: 1.2;
@@ -142,7 +141,6 @@
     font-weight: 700;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
     opacity: 0.7;
     margin-bottom: 2px;
@@ -615,6 +613,23 @@
     box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
 }
 
+/* Date input 캘린더 아이콘 색상 변경 (인라인 수정 모드) */
+.inline-input[type="date"] {
+    color-scheme: light;
+    cursor: pointer;
+}
+
+.inline-input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.5) sepia(1) saturate(5) hue-rotate(220deg);
+    opacity: 0.8;
+}
+
+.inline-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    filter: invert(0.4) sepia(1) saturate(6) hue-rotate(220deg);
+}
+
 .inline-actions {
     display: flex;
     gap: 6px;
@@ -687,7 +702,6 @@
     font-weight: 800;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 

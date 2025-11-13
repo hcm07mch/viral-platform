@@ -5,7 +5,7 @@ import OrderDetailClient from './OrderDetailClient';
 export default function OrderDetailPage() {
   return (
     <>
-      <Header active="orders" pageTitle="주문 상세" />
+      <Header active="orders" pageTitle="주문 항목 상세" />
       <OrderDetailClient />
     </>
   );
