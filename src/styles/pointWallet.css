@@ -8,14 +8,14 @@
   background-color: #f5f5f5;
 }
 
-.point-wallet-panel {
+.point-wallet-wrapper .point-wallet-panel {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
 /* ===== 잔액 카드 ===== */
-.balance-card {
+.point-wallet-wrapper .balance-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 16px;
   padding: 2rem;
@@ -23,33 +23,33 @@
   box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
 }
 
-.balance-header {
+.point-wallet-wrapper .balance-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.balance-title {
+.point-wallet-wrapper .balance-title {
   font-size: 1.1rem;
   font-weight: 600;
   opacity: 0.9;
 }
 
-.balance-amount-row {
+.point-wallet-wrapper .balance-amount-row {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 0.5rem;
 }
 
-.balance-amount {
+.point-wallet-wrapper .balance-amount {
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: -1px;
 }
 
-.balance-refresh-button {
+.point-wallet-wrapper .balance-refresh-button {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.6);
@@ -65,25 +65,25 @@
   flex-shrink: 0;
 }
 
-.balance-refresh-button:hover:not(:disabled) {
+.point-wallet-wrapper .balance-refresh-button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.25);
   color: white;
 }
 
-.balance-refresh-button:disabled {
+.point-wallet-wrapper .balance-refresh-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   animation: rotate 1s linear infinite;
 }
 
-.balance-header-actions {
+.point-wallet-wrapper .balance-header-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.charge-button {
+.point-wallet-wrapper .charge-button {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
@@ -96,33 +96,33 @@
   backdrop-filter: blur(10px);
 }
 
-.charge-button:hover {
+.point-wallet-wrapper .charge-button:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.balance-amount {
+.point-wallet-wrapper .balance-amount {
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   letter-spacing: -1px;
 }
 
-.balance-info {
+.point-wallet-wrapper .balance-info {
   font-size: 0.85rem;
   opacity: 0.8;
 }
 
 /* ===== 거래 내역 섹션 ===== */
-.transactions-section {
+.point-wallet-wrapper .transactions-section {
   background: white;
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.transactions-header {
+.point-wallet-wrapper .transactions-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -131,20 +131,20 @@
   gap: 1rem;
 }
 
-.transactions-title {
+.point-wallet-wrapper .transactions-title {
   font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
 }
 
-.transactions-header-actions {
+.point-wallet-wrapper .transactions-header-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.refresh-button {
+.point-wallet-wrapper .refresh-button {
   padding: 0.5rem 0.75rem;
   border: 1px solid #e5e7eb;
   background: white;
@@ -162,16 +162,16 @@
   line-height: 1;
 }
 
-.refresh-button:hover:not(:disabled) {
+.point-wallet-wrapper .refresh-button:hover:not(:disabled) {
   color: #6b7280;
   border-color: #d1d5db;
 }
 
-.refresh-button:active:not(:disabled) {
+.point-wallet-wrapper .refresh-button:active:not(:disabled) {
   transform: rotate(180deg);
 }
 
-.refresh-button:disabled {
+.point-wallet-wrapper .refresh-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   animation: rotate 1s linear infinite;
@@ -186,13 +186,13 @@
   }
 }
 
-.transaction-filters {
+.point-wallet-wrapper .transaction-filters {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
 
-.filter-btn {
+.point-wallet-wrapper .filter-btn {
   padding: 0.5rem 1rem;
   border: 1px solid #e5e7eb;
   background: white;
@@ -204,25 +204,25 @@
   transition: all 0.2s;
 }
 
-.filter-btn:hover {
+.point-wallet-wrapper .filter-btn:hover {
   border-color: #9ca3af;
   background: #f9fafb;
 }
 
-.filter-btn.active {
+.point-wallet-wrapper .filter-btn.active {
   background: #2563eb;
   color: white;
   border-color: #2563eb;
 }
 
 /* ===== 거래 내역 리스트 ===== */
-.transactions-list {
+.point-wallet-wrapper .transactions-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.empty-state {
+.point-wallet-wrapper .empty-state {
   padding: 60px 40px;
   text-align: center;
   font-size: 14px;
@@ -232,7 +232,7 @@
   border-radius: 8px;
 }
 
-.transaction-item {
+.point-wallet-wrapper .transaction-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -244,13 +244,13 @@
   gap: 1rem;
 }
 
-.transaction-item:hover {
+.point-wallet-wrapper .transaction-item:hover {
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-color: #d1d5db;
 }
 
-.transaction-left {
+.point-wallet-wrapper .transaction-left {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -258,7 +258,7 @@
   min-width: 0;
 }
 
-.transaction-type-badge {
+.point-wallet-wrapper .transaction-type-badge {
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -267,34 +267,34 @@
   flex-shrink: 0;
 }
 
-.transaction-type-badge[data-type="charge"] {
+.point-wallet-wrapper .transaction-type-badge[data-type="charge"] {
   background: #dbeafe;
   color: #1e40af;
 }
 
-.transaction-type-badge[data-type="deduct"] {
+.point-wallet-wrapper .transaction-type-badge[data-type="deduct"] {
   background: #fee2e2;
   color: #991b1b;
 }
 
-.transaction-type-badge[data-type="refund"] {
+.point-wallet-wrapper .transaction-type-badge[data-type="refund"] {
   background: #d1fae5;
   color: #065f46;
 }
 
-.transaction-type-badge[data-type="admin_adjust"] {
+.point-wallet-wrapper .transaction-type-badge[data-type="admin_adjust"] {
   background: #fef3c7;
   color: #92400e;
 }
 
-.transaction-details {
+.point-wallet-wrapper .transaction-details {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   min-width: 0;
 }
 
-.transaction-memo {
+.point-wallet-wrapper .transaction-memo {
   font-size: 0.95rem;
   font-weight: 600;
   color: #374151;
@@ -303,12 +303,12 @@
   white-space: nowrap;
 }
 
-.transaction-date {
+.point-wallet-wrapper .transaction-date {
   font-size: 0.8rem;
   color: #9ca3af;
 }
 
-.transaction-right {
+.point-wallet-wrapper .transaction-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -316,26 +316,26 @@
   flex-shrink: 0;
 }
 
-.transaction-amount {
+.point-wallet-wrapper .transaction-amount {
   font-size: 1.1rem;
   font-weight: 700;
 }
 
-.transaction-amount.positive {
+.point-wallet-wrapper .transaction-amount.positive {
   color: #059669;
 }
 
-.transaction-amount.negative {
+.point-wallet-wrapper .transaction-amount.negative {
   color: #dc2626;
 }
 
-.transaction-balance {
+.point-wallet-wrapper .transaction-balance {
   font-size: 0.8rem;
   color: #6b7280;
 }
 
 /* ===== 충전 모달 ===== */
-.charge-modal-backdrop {
+.point-wallet-wrapper .charge-modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
@@ -359,7 +359,7 @@
   }
 }
 
-.charge-modal {
+.point-wallet-wrapper .charge-modal {
   background: white;
   border-radius: 16px;
   width: 100%;
@@ -382,7 +382,7 @@
   }
 }
 
-.charge-modal-header {
+.point-wallet-wrapper .charge-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -390,14 +390,14 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.charge-modal-header h3 {
+.point-wallet-wrapper .charge-modal-header h3 {
   font-size: 1.3rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
 }
 
-.close-button {
+.point-wallet-wrapper .close-button {
   background: transparent;
   border: none;
   font-size: 1.5rem;
@@ -412,19 +412,19 @@
   transition: all 0.2s;
 }
 
-.close-button:hover {
+.point-wallet-wrapper .close-button:hover {
   background: #f3f4f6;
   color: #111827;
 }
 
-.charge-modal-body {
+.point-wallet-wrapper .charge-modal-body {
   flex: 1;
   overflow: hidden;
   padding: 0;
   display: flex;
 }
 
-.charge-iframe {
+.point-wallet-wrapper .charge-iframe {
   width: 100%;
   height: 100%;
   min-height: 500px;
@@ -437,73 +437,73 @@
     padding: 100px 16px 20px;
   }
 
-  .balance-card {
+  .point-wallet-wrapper .balance-card {
     padding: 1.5rem;
   }
 
-  .balance-header {
+  .point-wallet-wrapper .balance-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
 
-  .charge-button {
+  .point-wallet-wrapper .charge-button {
     width: 100%;
   }
 
-  .balance-amount-row {
+  .point-wallet-wrapper .balance-amount-row {
     flex-wrap: wrap;
   }
 
-  .balance-amount {
+  .point-wallet-wrapper .balance-amount {
     font-size: 2.5rem;
   }
 
-  .transactions-section {
+  .point-wallet-wrapper .transactions-section {
     padding: 1.5rem;
   }
 
-  .transactions-header {
+  .point-wallet-wrapper .transactions-header {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .transactions-header-actions {
+  .point-wallet-wrapper .transactions-header-actions {
     width: 100%;
     justify-content: space-between;
   }
 
-  .transaction-filters {
+  .point-wallet-wrapper .transaction-filters {
     flex: 1;
   }
 
-  .filter-btn {
+  .point-wallet-wrapper .filter-btn {
     flex: 1;
     text-align: center;
   }
 
-  .transaction-item {
+  .point-wallet-wrapper .transaction-item {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .transaction-left {
+  .point-wallet-wrapper .transaction-left {
     width: 100%;
   }
 
-  .transaction-right {
+  .point-wallet-wrapper .transaction-right {
     width: 100%;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
   }
 
-  .charge-modal {
+  .point-wallet-wrapper .charge-modal {
     max-width: 100%;
     max-height: 95vh;
   }
 
-  .charge-iframe {
+  .point-wallet-wrapper .charge-iframe {
     height: 500px;
   }
 }

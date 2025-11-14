@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 
 interface OrderItemInput {
   clientName: string;
@@ -61,13 +62,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. 잔액 부족 확인
-    if (profile.balance < totalPrice) {
+    const profileBalance = parseFloat(profile.balance);
+    if (profileBalance < totalPrice) {
       return NextResponse.json(
         { 
           error: '포인트가 부족합니다.',
           required: totalPrice,
-          current: profile.balance,
-          shortage: totalPrice - profile.balance
+          current: profileBalance,
+          shortage: totalPrice - profileBalance
         },
         { status: 400 }
       );
@@ -133,26 +135,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 8. 포인트 차감
-    const newBalance = profile.balance - totalPrice;
-    const { error: balanceError } = await supabase
-      .from('profiles')
-      .update({ balance: newBalance })
-      .eq('user_id', user.id);
+    // 8. point_ledger에 차감 내역 먼저 기록 (트리거가 자동으로 balance 업데이트)
+    // Service Role 클라이언트 사용 (RLS 우회)
+    const supabaseService = createServiceClient();
+    
+    // 현재 잔액 조회 (최신 상태)
+    const { data: currentLedger } = await supabaseService
+      .from('point_ledger')
+      .select('balance_after')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-    if (balanceError) {
-      console.error('포인트 차감 실패:', balanceError);
-      // 롤백
-      await supabase.from('order_items').delete().eq('order_id', order.id);
-      await supabase.from('orders').delete().eq('id', order.id);
-      return NextResponse.json(
-        { error: '포인트 차감에 실패했습니다.' },
-        { status: 500 }
-      );
-    }
+    const currentBalance = currentLedger?.balance_after ? parseFloat(currentLedger.balance_after) : parseFloat(profile.balance);
+    const newBalance = currentBalance - totalPrice;
 
-    // 9. point_ledger에 차감 내역 기록
-    const { error: ledgerError } = await supabase
+    const { error: ledgerError } = await supabaseService
       .from('point_ledger')
       .insert({
         user_id: user.id,
@@ -165,9 +164,17 @@ export async function POST(request: NextRequest) {
 
     if (ledgerError) {
       console.error('거래 내역 기록 실패:', ledgerError);
-      // 이미 포인트는 차감되었으므로 경고만 로그
-      // 실제로는 이것도 롤백해야 하지만, 간단한 구현을 위해 진행
+      // 롤백
+      await supabase.from('order_items').delete().eq('order_id', order.id);
+      await supabase.from('orders').delete().eq('id', order.id);
+      return NextResponse.json(
+        { error: '포인트 차감에 실패했습니다.' },
+        { status: 500 }
+      );
     }
+
+    // 9. 트리거가 profiles.balance를 자동 업데이트하므로 수동 업데이트 제거
+    // update_profile_balance() 트리거가 처리함
 
     // 10. 성공 응답
     return NextResponse.json({

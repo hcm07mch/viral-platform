@@ -87,6 +87,8 @@ export default function OrderDetailClient() {
   useEffect(() => {
     if (!itemId) return;
 
+    let channel: any = null;
+
     const setupRealtime = async () => {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
@@ -94,9 +96,14 @@ export default function OrderDetailClient() {
       console.log('=== Realtime 구독 시작 ===');
       console.log('Item ID:', itemId);
 
-      // 메시지 실시간 구독 - 필터 제거하고 모든 이벤트 수신
-      const channel = supabase
-        .channel(`order_item_messages_${itemId}`)
+      // 메시지 실시간 구독
+      channel = supabase
+        .channel(`order_item_messages:${itemId}`, {
+          config: {
+            broadcast: { self: true },
+            presence: { key: itemId }
+          },
+        })
         .on(
           'postgres_changes',
           {
@@ -112,6 +119,8 @@ export default function OrderDetailClient() {
             if (payload.eventType === 'INSERT') {
               console.log('✅ 새 메시지 추가');
               const newMsg = payload.new as any;
+              
+              // 새 메시지를 추가하되, 작성자 정보를 다시 fetch하거나 현재 사용자 정보 사용
               setMessages(prev => [...prev, {
                 id: newMsg.id,
                 message: newMsg.message,
@@ -119,8 +128,11 @@ export default function OrderDetailClient() {
                 author_role: newMsg.author_role,
                 is_read: newMsg.is_read,
                 created_at: newMsg.created_at,
-                profiles: { email: '' }
+                profiles: { email: newMsg.author_role === 'admin' ? '관리자' : '사용자' }
               }]);
+              
+              // 전체 메시지 목록을 다시 가져와서 정확한 정보 표시
+              setTimeout(() => fetchMessages(), 500);
             } else if (payload.eventType === 'UPDATE') {
               console.log('✅ 메시지 업데이트');
               const updatedMsg = payload.new as any;
@@ -139,19 +151,30 @@ export default function OrderDetailClient() {
           }
         )
         .subscribe((status, err) => {
-          console.log('구독 상태:', status);
-          if (err) console.error('구독 에러:', err);
+          console.log('📡 구독 상태:', status);
+          if (err) {
+            console.error('❌ 구독 에러:', err);
+            // 에러 발생 시 재연결 시도
+            if (err.message?.includes('mismatch')) {
+              console.warn('⚠️ Realtime 바인딩 불일치 - SQL 스크립트 실행 필요');
+              console.warn('실행: sql/fix_realtime_mismatch.sql');
+            }
+          }
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Realtime 구독 완료!');
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('❌ 구독 실패:', status);
+          }
         });
-
-      return () => {
-        console.log('=== Realtime 구독 해제 ===');
-        supabase.removeChannel(channel);
-      };
     };
 
-    const cleanup = setupRealtime();
+    setupRealtime();
+
     return () => {
-      cleanup.then(fn => fn && fn());
+      console.log('=== Realtime 구독 해제 ===');
+      if (channel) {
+        channel.unsubscribe();
+      }
     };
   }, [itemId]);
 
@@ -198,14 +221,16 @@ export default function OrderDetailClient() {
       });
       
       if (response.ok) {
-        // Realtime으로 자동 업데이트되므로 수동 추가 제거
+        // Realtime으로 자동 업데이트되므로 수동 fetch 제거
         setNewMessage('');
+        // 선택사항: 메시지 전송 성공 피드백
+        console.log('✅ 메시지 전송 성공');
       } else {
-        alert('메시지 전송에 실패했습니다.');
+        throw new Error('메시지 전송 실패');
       }
     } catch (error) {
       console.error('메시지 전송 오류:', error);
-      alert('메시지 전송 중 오류가 발생했습니다.');
+      alert('메시지 전송에 실패했습니다.');
     } finally {
       setIsSendingMessage(false);
     }
@@ -269,6 +294,32 @@ export default function OrderDetailClient() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // 메시지를 분(minute) 단위로 그룹화하는 함수
+  const groupMessagesByMinute = (messages: Message[]) => {
+    const groups: { key: string; time: string; messages: Message[] }[] = [];
+    
+    messages.forEach((msg) => {
+      const msgDate = new Date(msg.created_at);
+      // 연-월-일-시-분-작성자 단위로 그룹화 키 생성
+      const groupKey = `${msgDate.getFullYear()}-${msgDate.getMonth()}-${msgDate.getDate()}-${msgDate.getHours()}-${msgDate.getMinutes()}-${msg.author_role}`;
+      
+      // 마지막 그룹이 같은 키를 가지고 있으면 추가
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup.key === groupKey) {
+        lastGroup.messages.push(msg);
+      } else {
+        // 새로운 그룹 생성
+        groups.push({
+          key: groupKey,
+          time: formatMessageTime(msg.created_at),
+          messages: [msg]
+        });
+      }
+    });
+    
+    return groups;
   };
 
   const toggleAccordion = (id: string) => {
@@ -398,35 +449,35 @@ export default function OrderDetailClient() {
                 <div className="messages-container">
                   {messages.length > 0 ? (
                     <div className="messages-list">
-                      {messages.map((msg) => (
-                        <div key={msg.id} className={`message-wrapper ${msg.author_role}`}>
-                          {msg.is_read && msg.author_role === 'user' && (
-                            <div className="message-read-status">읽음</div>
-                          )}
-                          <div className="message-content">
-                            <div className="message-header">
-                              <span className="message-author">
-                                {msg.author_role === 'admin' ? '관리자' : '나'}
-                              </span>
-                              <div className="message-header-right">
-                                <span className="message-time">
-                                  {formatMessageTime(msg.created_at)}
-                                </span>
-                                {msg.author_role === 'user' && (
-                                  <button
-                                    className="message-delete-btn"
-                                    onClick={() => handleDeleteMessage(msg.id)}
-                                    title="삭제"
-                                  >
-                                    ×
-                                  </button>
-                                )}
+                      {groupMessagesByMinute(messages).map((group, groupIndex) => (
+                        <div key={group.key} className={`message-group ${group.messages[0].author_role}`}>
+                          <div className="message-header">
+                            <span className="message-author">
+                              {group.messages[0].author_role === 'admin' ? '관리자' : '나'}
+                            </span>
+                            <span className="message-time">{group.time}</span>
+                          </div>
+                          {group.messages.map((msg) => (
+                            <div key={msg.id} className="message-wrapper">
+                              {msg.is_read && msg.author_role === 'user' && (
+                                <div className="message-read-status">읽음</div>
+                              )}
+                              <div className="message-content">
+                                <div className={`message-bubble ${msg.author_role}`}>
+                                  <div className="message-text">{msg.message}</div>
+                                  {msg.author_role === 'user' && (
+                                    <button
+                                      className="message-delete-btn"
+                                      onClick={() => handleDeleteMessage(msg.id)}
+                                      title="삭제"
+                                    >
+                                      ×
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                            <div className={`message-bubble ${msg.author_role}`}>
-                              <div className="message-text">{msg.message}</div>
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       ))}
                     </div>
@@ -435,26 +486,48 @@ export default function OrderDetailClient() {
                   )}
                   
                   <div className="message-input-area">
-                    <textarea
-                      className="message-input"
-                      placeholder="메시지를 입력하세요..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                      rows={3}
-                    />
-                    <button 
-                      className="send-message-btn"
-                      onClick={handleSendMessage}
-                      disabled={isSendingMessage || !newMessage.trim()}
-                    >
-                      {isSendingMessage ? '전송중...' : '전송'}
-                    </button>
+                    <div className="message-input-wrapper">
+                      <textarea
+                        className="message-input"
+                        placeholder="메시지를 입력하세요..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        rows={3}
+                      />
+                      <button 
+                        className="send-message-btn"
+                        onClick={handleSendMessage}
+                        disabled={isSendingMessage || !newMessage.trim()}
+                        title={isSendingMessage ? '전송중...' : '전송'}
+                      >
+                        {isSendingMessage ? (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                            <path d="M12 2 A10 10 0 0 1 22 12" strokeLinecap="round">
+                              <animateTransform
+                                attributeName="transform"
+                                type="rotate"
+                                from="0 12 12"
+                                to="360 12 12"
+                                dur="1s"
+                                repeatCount="indefinite"
+                              />
+                            </path>
+                          </svg>
+                        ) : (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

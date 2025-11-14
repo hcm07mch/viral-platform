@@ -55,7 +55,7 @@ export default function PointWalletClient({
         .eq('user_id', user.id);
 
       const newBalance = (ledger ?? []).reduce(
-        (sum: number, row: any) => sum + Number(row.amount || 0),
+        (sum: number, row: any) => sum + parseFloat(row.amount || '0'),
         0
       );
 

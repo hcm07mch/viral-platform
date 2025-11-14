@@ -38,7 +38,7 @@ export default async function ProductDetailPage({ searchParams }: PageProps) {
 
     if (profile) {
       userTier = profile.tier;
-      userBalance = profile.balance || 0;
+      userBalance = parseFloat(profile.balance || '0');
     }
   }
 

@@ -835,6 +835,7 @@
 
 .items-grid .item-detail-button {
   width: 100%;
+  max-width: 120px;
   padding: 0.6rem;
   background: white;
   border: 1px solid #d1d5db;
@@ -844,6 +845,9 @@
   font-size: 0.875rem;
   font-weight: 500;
   transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .items-grid .item-detail-button:hover {
@@ -917,6 +921,9 @@
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
+  white-space: nowrap;
+  min-width: 70px;
+  max-width: 100px;
 }
 
 .items-rows .item-cell .item-detail-button:hover {
@@ -1141,8 +1148,9 @@
 }
 
 .item-detail-button {
-  width: 100%;
-  padding: 0.6rem;
+  width: auto;
+  max-width: 120px;
+  padding: 0.6rem 1rem;
   background: white;
   border: 1px solid #d1d5db;
   color: #374151;
@@ -1151,6 +1159,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .item-detail-button:hover {
