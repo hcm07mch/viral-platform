@@ -101,7 +101,7 @@ export async function GET(
     const itemDetail = {
       item_id: orderItem.id,
       order_id: order.id,
-      order_number: `#${order.id.slice(0, 8)}`,
+      order_number: `#${String(order.id).slice(0, 8)}`,
       product_name: order.product_name,
       client_name: orderItem.client_name,
       daily_qty: orderItem.daily_qty,

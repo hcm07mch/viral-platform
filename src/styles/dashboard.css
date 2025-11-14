@@ -22,6 +22,105 @@ body {
   background-color: #fafafa;
 }
 
+/* ===== 관리자 섹션 ===== */
+.admin-section {
+  margin-bottom: 24px;
+}
+
+.admin-banner {
+  background: linear-gradient(135deg, #d4af37 0%, #f4e5b2 50%, #d4af37 100%);
+  border: 2px solid #b8941f;
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3), 
+              0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.admin-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.admin-badge {
+  background: linear-gradient(135deg, #8b7355 0%, #6b5d4f 100%);
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2),
+              0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  letter-spacing: 0.5px;
+}
+
+.admin-text {
+  color: #4a3c2e;
+  font-size: 17px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.3px;
+}
+
+.admin-link {
+  background: linear-gradient(135deg, #4a3c2e 0%, #6b5d4f 100%);
+  color: #f4e5b2;
+  padding: 12px 24px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25),
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.admin-link:hover {
+  background: linear-gradient(135deg, #5d4d3a 0%, #7d6d5f 100%);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35),
+              0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
 /* ===== 상단 정보 영역 ===== */
 .top-info-row {
   display: grid; 

@@ -72,10 +72,31 @@ export default function ProductDetailClient({
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  
+  // DATE 필드의 초기값을 오늘 날짜로 설정
+  const getInitialFormData = () => {
+    const initialData: Record<string, any> = {};
+    inputDefs.forEach(def => {
+      if (def.field_type === 'DATE') {
+        // 오늘 날짜를 YYYY-MM-DD 형식으로 설정
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        initialData[def.field_key] = `${year}-${month}-${day}`;
+      }
+    });
+    return initialData;
+  };
+  
+  const [formData, setFormData] = useState<Record<string, any>>(getInitialFormData());
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [editingData, setEditingData] = useState<Record<string, any>>({});
   const { showAlert } = useAlert();
+
+  // 상품 주문 가능 여부 확인
+  const isProductActive = product.status === 'fine';
+  const isDiscontinued = product.status === 'off';
 
   // orderConfirm에서 돌아왔을 때 주문 데이터 복원
   useEffect(() => {
@@ -265,16 +286,34 @@ export default function ProductDetailClient({
                     {product.badge_text || product.badge}
                   </div>
                 )}
+                {isDiscontinued && (
+                  <div className="badge badge-discontinued">
+                    중단됨
+                  </div>
+                )}
               </div>
 
               <div className="product-meta-row">
                 {product.category && (
                   <div className="meta-chip">카테고리: {product.category}</div>
                 )}
-                <div className="meta-chip">
+                <div className={`meta-chip ${isDiscontinued ? 'status-discontinued' : ''}`}>
                   상태: {product.status_text || product.status}
                 </div>
               </div>
+
+              {isDiscontinued && (
+                <div className="discontinued-notice">
+                  <div className="discontinued-icon">⚠️</div>
+                  <div className="discontinued-content">
+                    <div className="discontinued-title">주문 불가 상품</div>
+                    <div className="discontinued-message">
+                      이 상품은 현재 구동이 중단되어 주문하실 수 없습니다.
+                      다른 상품을 이용해주세요.
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="subtxt">
                 {product.description || '상품 설명이 없습니다.'}
@@ -313,11 +352,11 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        <div className="panel">
+        <div className={`panel ${isDiscontinued ? 'panel-disabled' : ''}`}>
           <div className="panel-header">
             <span>주문 입력</span>
             <span className="subtxt">
-              필드는 상품마다 다르게 설정될 수 있습니다.
+              {isDiscontinued ? '이 상품은 주문하실 수 없습니다.' : '필드는 상품마다 다르게 설정될 수 있습니다.'}
             </span>
           </div>
 
@@ -383,8 +422,12 @@ export default function ProductDetailClient({
             </div>
           </div>
 
-          <div className="add-order-btn" onClick={handleAddOrder}>
-            + 이 내용으로 주문 추가
+          <div 
+            className={`add-order-btn ${isDiscontinued ? 'disabled' : ''}`} 
+            onClick={isDiscontinued ? undefined : handleAddOrder}
+            style={isDiscontinued ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
+          >
+            {isDiscontinued ? '⚠️ 주문 불가 (상품 중단됨)' : '+ 이 내용으로 주문 추가'}
           </div>
 
         </div>
@@ -558,7 +601,7 @@ export default function ProductDetailClient({
           </div>
 
           <div className="confirm-btn" onClick={handleConfirmOrder}>
-            주문 확정 (포인트 차감)
+            주문 확정
           </div>
 
           <div className="subtxt" style={{ marginTop: '12px' }}>

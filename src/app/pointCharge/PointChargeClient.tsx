@@ -7,9 +7,18 @@ const CHARGE_AMOUNTS = [
   10000, 30000, 50000, 100000, 300000, 500000
 ];
 
+const PAYMENT_METHODS = [
+  { id: 'test', name: '테스트 결제', icon: '🧪', enabled: true },
+  { id: 'card', name: '신용/체크카드', icon: '💳', enabled: false },
+  { id: 'kakao', name: '카카오페이', icon: '💬', enabled: false },
+  { id: 'toss', name: '토스페이', icon: '💙', enabled: false },
+  { id: 'bank', name: '계좌이체', icon: '🏦', enabled: false },
+];
+
 export default function PointChargeClient() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('test');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleAmountSelect = (amount: number) => {
@@ -35,16 +44,45 @@ export default function PointChargeClient() {
 
     setIsProcessing(true);
     
-    // TODO: 실제 결제 API 연동
-    setTimeout(() => {
-      alert(`${selectedAmount.toLocaleString()} 🪙 충전이 완료되었습니다!`);
-      setIsProcessing(false);
-      // 모달이면 부모 창 새로고침
-      if (window.opener) {
-        window.opener.location.reload();
-        window.close();
+    try {
+      // 결제 API 호출 (현재는 테스트 모드)
+      const response = await fetch('/api/payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: selectedAmount,
+          paymentMethod: paymentMethod,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '충전에 실패했습니다.');
       }
-    }, 1500);
+
+      if (data.success) {
+        alert(
+          `${selectedAmount.toLocaleString()} 🪙 충전이 완료되었습니다!\n` +
+          `현재 잔액: ${data.balance.toLocaleString()} 🪙`
+        );
+        
+        // 부모 창이 있으면 새로고침 후 현재 창 닫기
+        if (window.opener) {
+          window.opener.location.reload();
+          window.close();
+        } else {
+          // 부모 창이 없으면 포인트 지갑으로 이동
+          window.location.href = '/pointWallet';
+        }
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert(error instanceof Error ? error.message : '충전 중 오류가 발생했습니다.');
+      setIsProcessing(false);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -84,6 +122,27 @@ export default function PointChargeClient() {
               onChange={handleCustomAmountChange}
             />
             <span className="currency-suffix">🪙</span>
+          </div>
+        </div>
+
+        {/* 결제 수단 선택 */}
+        <div className="payment-method-section">
+          <label className="payment-method-label">결제 수단</label>
+          <div className="payment-method-grid">
+            {PAYMENT_METHODS.map((method) => (
+              <button
+                key={method.id}
+                className={`payment-method-button ${
+                  paymentMethod === method.id ? 'active' : ''
+                } ${!method.enabled ? 'disabled' : ''}`}
+                onClick={() => method.enabled && setPaymentMethod(method.id)}
+                disabled={!method.enabled}
+              >
+                <span className="payment-icon">{method.icon}</span>
+                <span className="payment-name">{method.name}</span>
+                {!method.enabled && <span className="coming-soon">준비중</span>}
+              </button>
+            ))}
           </div>
         </div>
 

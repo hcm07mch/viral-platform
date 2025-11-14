@@ -120,6 +120,86 @@
   pointer-events: none;
 }
 
+/* ===== 결제 수단 선택 ===== */
+.payment-method-section {
+  margin-bottom: 2rem;
+}
+
+.payment-method-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.payment-method-button {
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.payment-method-button:not(.disabled):hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+  transform: translateY(-2px);
+}
+
+.payment-method-button.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.payment-method-button.active .payment-name {
+  color: white;
+}
+
+.payment-method-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
+.payment-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.payment-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  transition: color 0.2s;
+}
+
+.coming-soon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.65rem;
+  padding: 0.25rem 0.5rem;
+  background: #fbbf24;
+  color: white;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 /* ===== 선택된 금액 카드 ===== */
 .selected-amount-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -221,6 +301,10 @@
   .amount-button {
     padding: 1rem;
     font-size: 0.95rem;
+  }
+
+  .payment-method-grid {
+    grid-template-columns: 1fr;
   }
 
   .selected-amount-value {

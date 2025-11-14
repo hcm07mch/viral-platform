@@ -76,7 +76,7 @@ export default function ProductListClient({
   const formatPrice = (product: Product): string => {
     const tierPrice = calculateTierPrice(product.vendor_base_price);
     const formattedPrice = tierPrice.toLocaleString('ko-KR');
-    return `${formattedPrice}${product.currency === 'KRW' ? ' 🪙' : product.currency}`;
+    return `${formattedPrice}${product.currency === 'KRW' ? ' 원' : product.currency}`;
   };
 
   const filtered = useMemo(() => {

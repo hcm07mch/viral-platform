@@ -30,7 +30,6 @@ export default function PointWalletClient({
   initialBalance,
   initialTransactions,
 }: PointWalletClientProps) {
-  const [showChargeModal, setShowChargeModal] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [balance, setBalance] = useState(initialBalance);
@@ -92,12 +91,8 @@ export default function PointWalletClient({
     });
   };
 
-  const openChargeModal = () => {
-    setShowChargeModal(true);
-  };
-
-  const closeChargeModal = () => {
-    setShowChargeModal(false);
+  const openChargeWindow = () => {
+    window.open('/pointCharge', '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
   };
 
   const filteredTransactions = filterType === 'all'
@@ -114,7 +109,7 @@ export default function PointWalletClient({
               <div className="balance-title">보유 포인트</div>
               <button 
                 className="charge-button"
-                onClick={openChargeModal}
+                onClick={openChargeWindow}
               >
                 💳 충전하기
               </button>
@@ -222,27 +217,6 @@ export default function PointWalletClient({
           </div>
         </section>
       </main>
-
-      {/* 충전 모달 */}
-      {showChargeModal && (
-        <div className="charge-modal-backdrop" onClick={closeChargeModal}>
-          <div className="charge-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="charge-modal-header">
-              <h3>포인트 충전</h3>
-              <button className="close-button" onClick={closeChargeModal}>
-                ✕
-              </button>
-            </div>
-            <div className="charge-modal-body">
-              <iframe
-                src="/pointCharge"
-                className="charge-iframe"
-                title="포인트 충전"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

@@ -79,6 +79,7 @@ export default async function DashboardPage() {
         pointBalance={pointBalance}
         orders={orders}
         displayTier={displayTier}
+        isAdmin={profile?.tier === 'admin'}
       />
     </>
   );

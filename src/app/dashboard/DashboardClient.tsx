@@ -21,12 +21,14 @@ type DashboardClientProps = {
   pointBalance: number;
   orders: Order[];
   displayTier: string;
+  isAdmin?: boolean;
 };
 
 export default function DashboardClient({
   pointBalance,
   orders,
   displayTier,
+  isAdmin = false,
 }: DashboardClientProps) {
   const [priceOpen, setPriceOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("received");
@@ -47,6 +49,20 @@ export default function DashboardClient({
 
   return (
     <div className="dashboard-wrapper">
+      {isAdmin && (
+        <section className="admin-section">
+          <div className="admin-banner">
+            <div className="admin-banner-content">
+              <span className="admin-badge">👑 관리자</span>
+              <span className="admin-text">관리자 전용 메뉴</span>
+            </div>
+            <Link href="/admin/cancellation-requests" className="admin-link">
+              관리자 메뉴 →
+            </Link>
+          </div>
+        </section>
+      )}
+
       <section className="top-info-row">
         {/* 가격/등급 카드 */}
         <div className="card" id="priceCard">

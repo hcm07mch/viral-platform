@@ -118,6 +118,7 @@
     align-items: center;
     justify-content: flex-end;
     min-width: 180px;
+    color: #444;
 }
 
 .price-main-detail {
@@ -818,6 +819,95 @@
     color: #fff;
     background: linear-gradient(135deg, #6366f1 0%, #1418ed 100%);
     box-shadow: 0 4px 12px #1044b966;
+}
+
+.badge-discontinued {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+/* ===== 중단 상품 안내 ===== */
+.discontinued-notice {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 2px solid #fca5a5;
+    border-radius: 12px;
+    margin-top: 16px;
+    animation: pulse-warning 2s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        border-color: #fca5a5;
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        border-color: #f87171;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    }
+}
+
+.discontinued-icon {
+    font-size: 32px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.discontinued-content {
+    flex: 1;
+}
+
+.discontinued-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #dc2626;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.discontinued-message {
+    font-size: 13px;
+    color: #991b1b;
+    line-height: 1.6;
+}
+
+.meta-chip.status-discontinued {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-color: #fca5a5;
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.panel-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.panel-disabled::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.add-order-btn.disabled {
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.add-order-btn.disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3);
 }
 
 /* ===== 반응형 ===== */
