@@ -7,7 +7,7 @@ import { signOut } from '@/app/auth/action';
 type HeaderClientProps = {
   displayAccount?: string;
   displayTier?: string;
-  active?: "products" | "orders" | "points";
+  active?: "customers" | "products" | "orders" | "points";
   pageTitle?: string; // 페이지 제목 (기본값: "자동 발주 대시보드")
   className?: string;
 };
@@ -30,6 +30,12 @@ export default function HeaderClient({
 
       <nav className="header-right">
         <div className="header-nav-links">
+          <Link
+            href="/customerList"
+            className={`header-link ${active === "customers" ? "active" : ""}`}
+          >
+            내 고객
+          </Link>
           <Link
             href="/productList"
             className={`header-link ${active === "products" ? "active" : ""}`}

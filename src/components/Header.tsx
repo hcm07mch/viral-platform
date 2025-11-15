@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from '@/app/auth/action';
 
 type HeaderProps = {
-  active?: "products" | "orders" | "points"; // 활성 탭 표시용(선택)
+  active?: "customers" | "products" | "orders" | "points"; // 활성 탭 표시용(선택)
   pageTitle?: string; // 페이지 제목 (기본값: "자동 발주 대시보드")
   className?: string; // 필요시 추가 스타일
 };
@@ -53,6 +53,12 @@ export default async function Header({
 
       <nav className="header-right">
         <div className="header-nav-links">
+          <Link
+            href="/customerList"
+            className={`header-link ${active === "customers" ? "active" : ""}`}
+          >
+            내 고객
+          </Link>
           <Link
             href="/productList"
             className={`header-link ${active === "products" ? "active" : ""}`}

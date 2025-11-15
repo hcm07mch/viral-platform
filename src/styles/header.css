@@ -39,11 +39,6 @@
   cursor: pointer;
 }
 
-/* .logo-box:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-} */
-
 .header-service-name {
   font-size: 14px;
   font-weight: 600;
