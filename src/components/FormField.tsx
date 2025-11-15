@@ -22,6 +22,7 @@ export interface FormFieldProps {
   placeholder?: string;
   value?: any;
   onChange?: (value: any) => void;
+  onFocus?: () => void;
   required?: boolean;
   options?: { value: string; label: string }[]; // SELECT, MULTISELECT용
   accept?: string; // FILE, IMAGE용
@@ -38,6 +39,7 @@ export default function FormField({
   placeholder,
   value,
   onChange,
+  onFocus,
   required = false,
   options = [],
   accept,
@@ -147,6 +149,7 @@ export default function FormField({
             placeholder={placeholder}
             value={value || ''}
             onChange={(e) => handleChange(e.target.value)}
+            onFocus={onFocus}
             disabled={disabled}
             required={required}
           />
@@ -160,6 +163,7 @@ export default function FormField({
             placeholder={placeholder}
             value={value || ''}
             onChange={(e) => handleChange(e.target.value)}
+            onFocus={onFocus}
             disabled={disabled}
             required={required}
             rows={4}

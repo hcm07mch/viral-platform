@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 import '@/styles/customerList.css';
 
 interface Customer {
   id: string;
   user_id: string;
-  business_name: string;
+  client_name: string;
   place_id?: string;
   place_url?: string;
   contact?: string;
@@ -26,13 +27,14 @@ export default function CustomerListClient({
   displayAccount,
   displayTier,
 }: CustomerListClientProps) {
+  const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [formData, setFormData] = useState({
-    business_name: '',
+    client_name: '',
     place_id: '',
     place_url: '',
     contact: '',
@@ -104,7 +106,7 @@ export default function CustomerListClient({
     if (customer) {
       setEditingCustomer(customer);
       setFormData({
-        business_name: customer.business_name,
+        client_name: customer.client_name,
         place_id: customer.place_id || '',
         place_url: customer.place_url || '',
         contact: customer.contact || '',
@@ -112,7 +114,7 @@ export default function CustomerListClient({
     } else {
       setEditingCustomer(null);
       setFormData({
-        business_name: '',
+        client_name: '',
         place_id: '',
         place_url: '',
         contact: '',
@@ -125,7 +127,7 @@ export default function CustomerListClient({
     setShowModal(false);
     setEditingCustomer(null);
     setFormData({
-      business_name: '',
+      client_name: '',
       place_id: '',
       place_url: '',
       contact: '',
@@ -135,7 +137,7 @@ export default function CustomerListClient({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.business_name.trim()) {
+    if (!formData.client_name.trim()) {
       alert('상호명을 입력해주세요.');
       return;
     }
@@ -146,7 +148,7 @@ export default function CustomerListClient({
         const { error } = await supabase
           .from('customers')
           .update({
-            business_name: formData.business_name,
+            client_name: formData.client_name,
             place_id: formData.place_id || null,
             place_url: formData.place_url || null,
             contact: formData.contact || null,
@@ -160,7 +162,7 @@ export default function CustomerListClient({
         // 등록
         const { error } = await supabase.from('customers').insert({
           user_id: userId,
-          business_name: formData.business_name,
+          client_name: formData.client_name,
           place_id: formData.place_id || null,
           place_url: formData.place_url || null,
           contact: formData.contact || null,
@@ -284,12 +286,17 @@ export default function CustomerListClient({
 
             <div className={viewMode === 'grid' ? 'customers-grid' : 'customers-list'}>
               {customers.map((customer) => (
-                <div key={customer.id} className={viewMode === 'grid' ? 'customer-card' : 'customer-row'}>
+                <div 
+                  key={customer.id} 
+                  className={viewMode === 'grid' ? 'customer-card' : 'customer-row'}
+                  onClick={() => router.push(`/customerDetail/${customer.id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
                   {viewMode === 'grid' ? (
                     <>
                       <div className="card-header">
-                        <h3 className="customer-name">{customer.business_name}</h3>
-                        <div className="card-actions">
+                        <h3 className="customer-name">{customer.client_name}</h3>
+                        <div className="card-actions" onClick={(e) => e.stopPropagation()}>
                           <button
                             className="edit-btn"
                             onClick={() => handleOpenModal(customer)}
@@ -330,13 +337,18 @@ export default function CustomerListClient({
                     </>
                   ) : (
                     <>
-                      <div className="list-cell list-cell-name">{customer.business_name}</div>
+                      <div 
+                        className="list-cell list-cell-name"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {customer.client_name}
+                      </div>
                       <div className="list-cell list-cell-place">{customer.place_id || '-'}</div>
                       <div className="list-cell list-cell-contact">{customer.contact || '-'}</div>
                       <div className="list-cell list-cell-date">
                         {new Date(customer.created_at).toLocaleDateString('ko-KR')}
                       </div>
-                      <div className="list-cell list-cell-actions">
+                      <div className="list-cell list-cell-actions" onClick={(e) => e.stopPropagation()}>
                         <button
                           className="edit-btn"
                           onClick={() => handleOpenModal(customer)}
@@ -363,7 +375,7 @@ export default function CustomerListClient({
 
       {/* 등록/수정 모달 */}
       {showModal && (
-        <div className="modal-backdrop" onClick={handleCloseModal}>
+        <div className="modal-backdrop">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">
@@ -382,9 +394,9 @@ export default function CustomerListClient({
                 <input
                   type="text"
                   className="form-input"
-                  value={formData.business_name}
+                  value={formData.client_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, business_name: e.target.value })
+                    setFormData({ ...formData, client_name: e.target.value })
                   }
                   placeholder="고객사 상호명을 입력하세요"
                   required

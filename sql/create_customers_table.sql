@@ -2,19 +2,22 @@
 CREATE TABLE IF NOT EXISTS customers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  business_name TEXT NOT NULL,
+  client_name TEXT NOT NULL,
   place_id TEXT,
   place_url TEXT,
   contact TEXT,
+  -- 추가 필드들 (product_input_defs와 연동 가능하도록)
+  extra_fields JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 인덱스 생성
 CREATE INDEX IF NOT EXISTS idx_customers_user_id ON customers(user_id);
-CREATE INDEX IF NOT EXISTS idx_customers_business_name ON customers(business_name);
+CREATE INDEX IF NOT EXISTS idx_customers_client_name ON customers(client_name);
 CREATE INDEX IF NOT EXISTS idx_customers_created_at ON customers(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_customers_place_url ON customers(place_url);
+CREATE INDEX IF NOT EXISTS idx_customers_extra_fields ON customers USING GIN (extra_fields);
 
 -- RLS (Row Level Security) 활성화
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
@@ -63,8 +66,10 @@ CREATE TRIGGER trigger_update_customers_updated_at
 COMMENT ON TABLE customers IS '대행사 사용자가 관리하는 고객사 정보';
 COMMENT ON COLUMN customers.id IS '고유 식별자';
 COMMENT ON COLUMN customers.user_id IS '대행사 사용자 ID';
-COMMENT ON COLUMN customers.business_name IS '고객사 상호명';
-COMMENT ON COLUMN customers.place_id IS 'N사 플레이스 ID';
+COMMENT ON COLUMN customers.client_name IS '고객사 상호명 (field_key: client_name과 매핑)';
+COMMENT ON COLUMN customers.place_id IS 'N사 플레이스 ID (field_key: place_id와 매핑)';
+COMMENT ON COLUMN customers.place_url IS '플레이스 URL';
 COMMENT ON COLUMN customers.contact IS '연락처 (전화번호 또는 이메일)';
+COMMENT ON COLUMN customers.extra_fields IS '추가 필드 (JSONB) - product_input_defs의 field_key를 키로 사용';
 COMMENT ON COLUMN customers.created_at IS '생성 일시';
 COMMENT ON COLUMN customers.updated_at IS '수정 일시';

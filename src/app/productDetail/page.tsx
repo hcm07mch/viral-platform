@@ -161,6 +161,7 @@ export default async function ProductDetailPage({ searchParams }: PageProps) {
         userBalance={userBalance}
         notices={notices}
         inputDefs={inputDefs || []}
+        userId={user?.id}
       />
     </>
   );

@@ -4,6 +4,7 @@ import "@/styles/toast.css";
 import Footer from "@/components/Footer";
 import { AlertProvider } from "@/contexts/AlertContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { ConfirmProvider } from "@/contexts/ConfirmContext";
 
 export const metadata: Metadata = {
   title: "AdOrder",
@@ -20,8 +21,10 @@ export default function RootLayout({
       <body>
         <AlertProvider>
           <ToastProvider>
-            {children}
-            <Footer />
+            <ConfirmProvider>
+              {children}
+              <Footer />
+            </ConfirmProvider>
           </ToastProvider>
         </AlertProvider>
       </body>

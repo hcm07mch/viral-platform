@@ -27,7 +27,6 @@
     position: sticky;
     top: 88px;
     height: fit-content;
-    max-height: calc(100vh - 104px);
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -503,6 +502,28 @@
     color: white;
 }
 
+.acc-duplicate-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    border: 1px solid #10b981;
+    background-color: #ffffff;
+    color: #10b981;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.acc-duplicate-btn:hover {
+    background-color: #10b981;
+    color: white;
+}
+
 .acc-edit-btn {
     position: absolute;
     bottom: 10px;
@@ -953,4 +974,116 @@
         flex: 1 1 100%;
         min-width: 100%;
     }
+}
+
+/* ===== 고객 선택 드롭다운 스타일 ===== */
+.customer-select-wrapper select,
+.keyword-selector-wrapper select {
+    color: #1f2937;
+    background-color: #ffffff;
+}
+
+.customer-select-wrapper select option,
+.keyword-selector-wrapper select option {
+    color: #1f2937;
+    background-color: #ffffff;
+    padding: 10px;
+}
+
+.customer-select-wrapper select:disabled,
+.keyword-selector-wrapper select:disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* ===== 모달 스타일 ===== */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 20px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+}
+
+.modal-close:hover {
+    background-color: #f3f4f6;
+    color: #1a1a1a;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
 }
